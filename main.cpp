@@ -6,6 +6,8 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 
+#include "util/TracedException.h"
+
 bool init_allegro()
 {
     if (!al_init())
@@ -38,20 +40,20 @@ bool init_allegro()
 int main(int argc, char** argv)
 {
     if (!init_allegro())
-        return EXIT_FAILURE;
+        throw TracedException("Could not initalise Allegro");
 
     auto display = al_create_display(800, 600);
     auto timer = al_create_timer(ALLEGRO_BPS_TO_SECS(60));
     auto eventQueue = al_create_event_queue();
 
     if (display == nullptr)
-        std::cout << "BAD display" << std::endl;
+        throw TracedException("Bad Display");
 
     if (timer == nullptr)
-        std::cout << "BAD timer" << std::endl;
+        throw TracedException("Bad Timer");
 
     if (eventQueue == nullptr)
-        std::cout << "BAD eventqueue" << std::endl;
+        throw TracedException("Bad EventQueue");
 
     al_register_event_source(eventQueue, al_get_display_event_source(display));
     al_register_event_source(eventQueue, al_get_timer_event_source(timer));
