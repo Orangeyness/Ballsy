@@ -1,0 +1,16 @@
+CMAKE_CXX_FLAGS := ${CMAKE_CXX_FLAGS}
+
+# Absolute paths to Allegro source and build directories.
+# CMAKE_SOURCE_DIR := ${ALLEGRO_SOURCE_DIR}
+# CMAKE_BINARY_DIR := ${ALLEGRO_BUILD_DIR}
+
+GAME_SOURCES := ${ANDROID_GAME_SOURCES}
+
+TOOLCHAIN_DIR := ${ANDROID_NDK_TOOLCHAIN_ROOT}
+
+# Relative path to prebuilt Allegro libraries from LOCAL_PATH.
+RELATIVE_LIB_DIR := ${ALLEGRO_LIB_DIR}
+
+# Library type suffix on Allegro libraries, e.g. "-debug".
+# XXX changing this requires manual editing of the System.loadLibrary calls
+LIB_TYPE_SUFFIX := ${ALLEGRO_LIB_TYPE_SUFFIX}
