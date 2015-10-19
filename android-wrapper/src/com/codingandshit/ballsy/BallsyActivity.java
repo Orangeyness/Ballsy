@@ -1,8 +1,8 @@
-package org.liballeg.example;
+package com.codingandshit.ballsy;
 
 import org.liballeg.android.AllegroActivity;
 
-public class ExampleActivity extends AllegroActivity {
+public class BallsyActivity extends AllegroActivity {
 
    /* Load Allegro and other shared libraries in the lib directory of the apk
     * bundle.  You must load libraries which are required by later libraries
@@ -23,7 +23,7 @@ public class ExampleActivity extends AllegroActivity {
     * shared object `libapp.so'.  You can specify another library name by
     * overriding the constructor.
     */
-   public ExampleActivity() {
-      super("libexample.so");
+   public BallsyActivity() {
+      super("libapp.so");
    }
 }

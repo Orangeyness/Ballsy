@@ -35,7 +35,7 @@ include $(PREBUILT_SHARED_LIBRARY)
 # Declare our application.
 # Source files are relative to $(LOCAL_PATH).
 include $(CLEAR_VARS)
-LOCAL_MODULE    := example
+LOCAL_MODULE    := app 
 LOCAL_SRC_FILES := $(GAME_SOURCES)
 LOCAL_CFLAGS    += -W -Wall
 LOCAL_SHARED_LIBRARIES := allegro

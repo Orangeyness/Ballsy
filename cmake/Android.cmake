@@ -38,13 +38,13 @@ endif()
 
 set(prog "Ballsy")
 set(prog_target ${prog})
-set(package "org.liballeg.examples.${prog}")
-set(package_slash "org/liballeg/examples/${prog}")
+set(package "com.codingandshit.ballsy.${prog}")
+set(package_slash "com/codingandshit/ballsy/${prog}")
 set(activity "Activity")
 
 # The Android project directory.
 set(project_dir "${CMAKE_CURRENT_BINARY_DIR}/${prog}.project")
-set(project_apk "${project_dir}/bin/example-debug.apk")
+set(project_apk "${project_dir}/bin/ballsy-debug.apk")
 
 set(ALLEGRO_JAR_PATH "${project_dir}/allegro")
 set(ALLEGRO_LIB_TYPE_SUFFIX "-debug")
@@ -55,17 +55,17 @@ file(COPY ${CMAKE_SOURCE_DIR}/assets/ DESTINATION ${project_dir}/assets/)
 set(ANDROID_SOURCE_DIR_PREFIX "c")
 set(ANDROID_CPP_SOURCES "")
 foreach(f ${GAME_CPP_SOURCES})
-    LIST(APPEND ANDROID_CPP_SOURCES "../${ANDROID_SOURCE_PREFIX}${f}")
+    LIST(APPEND ANDROID_CPP_SOURCES "../${ANDROID_SOURCE_DIR_PREFIX}${f}")
 endforeach(f)
 string (REPLACE ";" "," ANDROID_CPP_SOURCES "${ANDROID_CPP_SOURCES}")
 
 set(ANDROID_ALL_SOURCES "")
 foreach(f ${GAME_ALL_SOURCES})
-    LIST(APPEND ANDROID_ALL_SOURCES "${project_dir}/${ANDROID_SOURCE_PREFIX}${f}")
+    LIST(APPEND ANDROID_ALL_SOURCES "${project_dir}/${ANDROID_SOURCE_DIR_PREFIX}${f}")
 
     add_custom_command(
-        OUTPUT ${project_dir}/${ANDROID_SOURCE_PREFIX}${f}
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${f} ${project_dir}/${ANDROID_SOURCE_PREFIX}${f}
+        OUTPUT ${project_dir}/${ANDROID_SOURCE_DIR_PREFIX}${f}
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${f} ${project_dir}/${ANDROID_SOURCE_DIR_PREFIX}${f}
         MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/${f})
 endforeach(f)
 
@@ -91,9 +91,6 @@ configure_file(
     ${project_dir}/jni/localgen.mk.in
     ${project_dir}/jni/localgen.mk
     )
- 
-message(STATUS "CPP: ${ANDROID_CPP_SOURCES}")
-message(STATUS "ALL: ${ANDROID_ALL_SOURCES}")
 
 add_custom_command(
     OUTPUT ${project_apk}
@@ -120,5 +117,5 @@ add_custom_target(install_apk
 add_custom_target(run_apk
     DEPENDS install_apk
     COMMAND adb -d shell
-            'am start -a android.intent.action.MAIN -n org.liballeg.example/.ExampleActivity'
+            'am start -a android.intent.action.MAIN -n com.codingandshit.ballsy/.BallsyActivity'
     )
