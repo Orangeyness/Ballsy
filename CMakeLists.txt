@@ -11,12 +11,13 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -g")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-set(GAME_SOURCES
-    src/main.cpp
-    #src/main.c
-    #src/common.c
-    #src/ex_bitmap.c
-    )
+set(GAME_SOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}/src")
+
+file(GLOB_RECURSE GAME_CPP_SOURCES RELATIVE ${CMAKE_SOURCE_DIR} "${GAME_SOURCE_DIRECTORY}/*.cpp")
+file(GLOB_RECURSE GAME_ALL_SOURCES RELATIVE ${CMAKE_SOURCE_DIR} "${GAME_SOURCE_DIRECTORY}/*")
+
+message(STATUS "CPP: ${GAME_CPP_SOURCES}")
+message(STATUS "ALL: ${GAME_ALL_SOURCES}")
 
 if(WANT_ANDROID)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANDROID=1") 
@@ -28,15 +29,8 @@ else()
     find_package(Allegro5 REQUIRED)
 
     include_directories(${ALLEGRO_INCLUDE_DIRS})
-    include_directories("${CMAKE_SOURCE_DIR}/include")
 
-    add_executable(${CMAKE_PROJECT_NAME} ${GAME_SOURCES})
+    add_executable(${CMAKE_PROJECT_NAME} ${GAME_CPP_SOURCES})
 
     target_link_libraries(${CMAKE_PROJECT_NAME} ${ALLEGRO_LIBRARIES})
 endif(WANT_ANDROID)
-
-
-
-#add_subdirectory (src)
-#add_subdirectory (test)
-

@@ -36,17 +36,6 @@ if(NOT ANT)
     message(FATAL_ERROR "ant not found")
 endif()
 
-FUNCTION(PREPEND var prefix)
-    SET(listVar "")
-    FOREACH(f ${ARGN})
-        LIST(APPEND listVar "${prefix}${f}")
-    ENDFOREACH(f)
-    SET(${var} "${listVar}" PARENT_SCOPE)
-ENDFUNCTION(PREPEND)
-
-PREPEND(ANDROID_GAME_SOURCES "../c" ${GAME_SOURCES})
-string (REPLACE ";" "," ANDROID_GAME_SOURCES "${ANDROID_GAME_SOURCES}")
-
 set(prog "Ballsy")
 set(prog_target ${prog})
 set(package "org.liballeg.examples.${prog}")
@@ -61,8 +50,24 @@ set(ALLEGRO_JAR_PATH "${project_dir}/allegro")
 set(ALLEGRO_LIB_TYPE_SUFFIX "-debug")
 
 file(COPY ${CMAKE_SOURCE_DIR}/android-wrapper/ DESTINATION ${project_dir})
-file(COPY ${CMAKE_SOURCE_DIR}/src/ DESTINATION ${project_dir}/csrc/)
 file(COPY ${CMAKE_SOURCE_DIR}/assets/ DESTINATION ${project_dir}/assets/)
+
+set(ANDROID_SOURCE_DIR_PREFIX "c")
+set(ANDROID_CPP_SOURCES "")
+foreach(f ${GAME_CPP_SOURCES})
+    LIST(APPEND ANDROID_CPP_SOURCES "../${ANDROID_SOURCE_PREFIX}${f}")
+endforeach(f)
+string (REPLACE ";" "," ANDROID_CPP_SOURCES "${ANDROID_CPP_SOURCES}")
+
+set(ANDROID_ALL_SOURCES "")
+foreach(f ${GAME_ALL_SOURCES})
+    LIST(APPEND ANDROID_ALL_SOURCES "${project_dir}/${ANDROID_SOURCE_PREFIX}${f}")
+
+    add_custom_command(
+        OUTPUT ${project_dir}/${ANDROID_SOURCE_PREFIX}${f}
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${f} ${project_dir}/${ANDROID_SOURCE_PREFIX}${f}
+        MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/${f})
+endforeach(f)
 
 add_custom_command(
     OUTPUT ${project_dir}/local.properties
@@ -87,10 +92,13 @@ configure_file(
     ${project_dir}/jni/localgen.mk
     )
  
+message(STATUS "CPP: ${ANDROID_CPP_SOURCES}")
+message(STATUS "ALL: ${ANDROID_ALL_SOURCES}")
+
 add_custom_command(
     OUTPUT ${project_apk}
     DEPENDS ${project_dir}/local.properties
-#DEPENDS ${EXAMPLE_SOURCES}
+    DEPENDS ${ANDROID_ALL_SOURCES}
     WORKING_DIRECTORY ${project_dir}
     COMMAND ${NDK_BUILD}
     COMMAND ${ANT_COMMAND} debug
