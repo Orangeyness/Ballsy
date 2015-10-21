@@ -1,5 +1,5 @@
-#ifndef H_GEXCEPTION
-#define H_Traced_EXCEPTION
+#ifndef H_TRACED_EXCEPTION
+#define H_TRACED_EXCEPTION
 
 #include <exception>
 #include <stdexcept>

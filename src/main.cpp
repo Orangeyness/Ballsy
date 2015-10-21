@@ -8,6 +8,9 @@
    #include "allegro5/allegro_android.h"
 #endif
 
+#include "EventLoop.h"
+#include "ShutdownListener.h"
+#include "BallScene.h"
 #include "util/TracedException.h"
 
 bool init_allegro()
@@ -44,62 +47,34 @@ int main(int argc, char** argv)
     if (!init_allegro())
         throw TracedException("Could not initalise Allegro");
 
-    auto display = al_create_display(800, 600);
-    auto timer = al_create_timer(ALLEGRO_BPS_TO_SECS(60));
-    auto eventQueue = al_create_event_queue();
+#ifdef ANDROID
+    ALLEGRO_MONITOR_INFO monitor_info;
+    al_get_monitor_info(0, &monitor_info);
+
+    int width = (monitor_info.x2 - monitor_info.x1); 
+    int height = (monitor_info.y2 - monitor_info.x1);
+#else
+    int width = 405;
+    int height = 720;
+#endif
+
+    EventLoop gameLoop;
+    BallScene ballScene(width, height);
+    ShutdownListener shutdownListener;
+
+    auto display = al_create_display(width, height);
 
     if (display == nullptr)
         throw TracedException("Bad Display");
 
-    if (timer == nullptr)
-        throw TracedException("Bad Timer");
+    gameLoop.RegisterSource(al_get_display_event_source(display));
+    gameLoop.RegisterSource(al_get_keyboard_event_source());
+    gameLoop.RegisterListener(shutdownListener);
+    gameLoop.Register(ballScene);
 
-    if (eventQueue == nullptr)
-        throw TracedException("Bad EventQueue");
+    gameLoop.Run();
 
-    al_register_event_source(eventQueue, al_get_display_event_source(display));
-    al_register_event_source(eventQueue, al_get_timer_event_source(timer));
-    al_register_event_source(eventQueue, al_get_keyboard_event_source());
-
-    al_start_timer(timer);
-
-    bool render = true;
-    bool gameActive = true;
-    while (gameActive)
-    {
-        ALLEGRO_EVENT event;
-        al_wait_for_event(eventQueue, &event);
-
-        switch(event.type)
-        {
-            case ALLEGRO_EVENT_DISPLAY_CLOSE:
-                gameActive = false;
-                break;
-
-            case ALLEGRO_EVENT_KEY_DOWN:
-                if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
-                    gameActive = false;
-                break;
-
-            case ALLEGRO_EVENT_TIMER:
-               render = true;
-               break;               
-        }
-
-        if (render && al_is_event_queue_empty(eventQueue))
-        {
-            al_clear_to_color(al_map_rgb(255, 255, 255));
-
-            al_draw_filled_circle(400, 300, 50, al_map_rgb(255, 0, 0));
-
-            al_flip_display();
-            render = false;
-        }
-    }
-
-    al_destroy_timer(timer);
     al_destroy_display(display);
-    al_destroy_event_queue(eventQueue);
 
     return EXIT_SUCCESS;
 }
