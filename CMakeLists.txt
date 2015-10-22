@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.8)
+cmake_minimum_required (VERSION 3.0.0)
 project (Ballsy)
 
 option(WANT_ANDROID "Build for Android" OFF)
@@ -29,6 +29,7 @@ else()
     find_package(Allegro5 REQUIRED)
 
     include_directories(${ALLEGRO_INCLUDE_DIRS})
+    include_directories(${GAME_SOURCE_DIRECTORY})
 
     add_executable(${CMAKE_PROJECT_NAME} ${GAME_CPP_SOURCES})
 

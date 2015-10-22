@@ -8,10 +8,10 @@
    #include "allegro5/allegro_android.h"
 #endif
 
-#include "EventLoop.h"
+#include "Events/EventLoop.h"
 #include "ShutdownListener.h"
 #include "BallScene.h"
-#include "util/TracedException.h"
+#include "Util/TracedException.h"
 
 bool init_allegro()
 {
@@ -45,7 +45,7 @@ bool init_allegro()
 int main(int argc, char** argv)
 {
     if (!init_allegro())
-        throw TracedException("Could not initalise Allegro");
+        throw TracedException("Could not initialise Allegro");
 
 #ifdef ANDROID
     ALLEGRO_MONITOR_INFO monitor_info;
@@ -58,19 +58,20 @@ int main(int argc, char** argv)
     int height = 720;
 #endif
 
-    EventLoop gameLoop;
-    BallScene ballScene(width, height);
-    ShutdownListener shutdownListener;
-
     auto display = al_create_display(width, height);
 
     if (display == nullptr)
         throw TracedException("Bad Display");
 
+    BallScene ballScene(width, height);
+    ShutdownListener shutdownListener;
+
+    EventLoop gameLoop;
     gameLoop.RegisterSource(al_get_display_event_source(display));
     gameLoop.RegisterSource(al_get_keyboard_event_source());
     gameLoop.RegisterListener(shutdownListener);
-    gameLoop.Register(ballScene);
+    gameLoop.RegisterSource(ballScene);
+    gameLoop.RegisterListener(ballScene);
 
     gameLoop.Run();
 

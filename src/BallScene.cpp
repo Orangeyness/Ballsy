@@ -1,5 +1,5 @@
 #include "BallScene.h"
-#include "util/TracedException.h"
+#include "Util/TracedException.h"
 
 #include <allegro5/allegro_primitives.h>
 
@@ -7,7 +7,7 @@ BallScene::BallScene(int width, int height)
     : _width(width),
       _height(height)
 {
-    _timer = al_create_timer(ALLEGRO_BPS_TO_SECS(30));
+    _timer = al_create_timer(ALLEGRO_BPS_TO_SECS(60));
 
     if (_timer == nullptr)
         throw TracedException("Bad Timer");
@@ -43,6 +43,8 @@ BallScene::BallScene(int width, int height)
     _balls[4].radius = 34;
 
     al_start_timer(_timer);
+
+    _needRenderEvent.type = EVENT_LOOP_RENDER_NEEDED;
 }
 
 BallScene::~BallScene()
@@ -50,24 +52,23 @@ BallScene::~BallScene()
     al_destroy_timer(_timer);
 }
 
-void BallScene::SetEventLoop(EventLoopListenerAdder loop)
+void BallScene::SetupListen(EventQueueAccessor eQ)
 {
     using namespace std::placeholders;
 
-    loop.ListenFor(ALLEGRO_EVENT_TIMER, std::bind(&BallScene::Update, this, _1));
-    loop.ListenFor(EventTypes::RENDER_EVENT, std::bind(&BallScene::Render, this, _1));
+    eQ.ListenFor(GetTimerEventId(ALLEGRO_EVENT_TIMER, _timer), std::bind(&BallScene::OnUpdate, this, _2));
+    eQ.ListenFor(GetEventId(EVENT_RENDER), std::bind(&BallScene::OnRender, this));
+    eQ.ListenFor(GetEventId(EVENT_SCENE_PAUSE), std::bind(&BallScene::OnPause, this));
+    eQ.ListenFor(GetEventId(EVENT_SCENE_RESUME), std::bind(&BallScene::OnResume, this));
 }
 
-ALLEGRO_EVENT_SOURCE* BallScene::GetEventSource() const
+void BallScene::SetupTalk(EventQueueAccessor eQ)
 {
-    return al_get_timer_event_source(_timer);
+    eQ.TalkFrom(al_get_timer_event_source(_timer));
 }
 
-EventCallbackResult BallScene::Update(const ALLEGRO_EVENT& event)
+void BallScene::OnUpdate(EventQueueAccessor eQ)
 {
-    if (event.timer.source != _timer)
-        return EventCallbackResult::NORMAL;   
-
     for(Ball& b : _balls)
     {
         b.x += b.xspeed;
@@ -94,10 +95,10 @@ EventCallbackResult BallScene::Update(const ALLEGRO_EVENT& event)
         }
     }
 
-    return EventCallbackResult::NEED_RENDER;
+    eQ.Talk(_needRenderEvent);
 }
 
-EventCallbackResult BallScene::Render(const ALLEGRO_EVENT& event)
+void BallScene::OnRender()
 {
     al_clear_to_color(al_map_rgb(200, 200, 200));
 
@@ -105,6 +106,14 @@ EventCallbackResult BallScene::Render(const ALLEGRO_EVENT& event)
         al_draw_filled_circle(ball.x, ball.y, ball.radius, al_map_rgb(255, 0, 0));
 
     al_flip_display();
+}
 
-    return EventCallbackResult::NORMAL;
+void BallScene::OnPause()
+{
+    al_stop_timer(_timer);
+}
+
+void BallScene::OnResume()
+{
+    al_start_timer(_timer);
 }
