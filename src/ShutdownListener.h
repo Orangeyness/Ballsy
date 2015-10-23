@@ -1,18 +1,19 @@
 #ifndef H_SHUTDOWN_LISTENER
 #define H_SHUTDOWN_LISTENER
 
-#include "Events/EventLoop.h"
+#include "Events/Events.h"
 #include <allegro5/allegro.h>
 
 class ShutdownListener
 {
     private:
-        void Shutdown(EventQueueAccessor eQ);
-        void Pause(EventQueueAccessor eQ);
-        void Resume(EventQueueAccessor eQ);
+        void Shutdown(Events::EventBoy& e);
+        void Pause(Events::EventBoy& e);
+        void Resume(Events::EventBoy& e);
+        void Key(const ALLEGRO_EVENT& event);
 
     public:
-        void SetupListen(EventQueueAccessor eQ);
+        void ConnectEvents(Events::EventBoy e);
 };
 
 #endif

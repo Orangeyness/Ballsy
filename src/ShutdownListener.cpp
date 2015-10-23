@@ -1,39 +1,53 @@
 #include "ShutdownListener.h"
 
-void ShutdownListener::Shutdown(EventQueueAccessor eQ)
-{
-    ALLEGRO_EVENT stopEvent;
-    stopEvent.user.type = EVENT_LOOP_STOP;
+#include <iostream>
 
-    eQ.Talk(stopEvent);
+using namespace Events;
+
+void ShutdownListener::Shutdown(EventBoy& e)
+{
+    e.Talk(EVENT_LOOP_STOP);
 }
 
-void ShutdownListener::Pause(EventQueueAccessor eQ)
+void ShutdownListener::Pause(EventBoy& e)
 {
-    ALLEGRO_EVENT event;
-    event.user.type = EVENT_SCENE_PAUSE;
-
-    eQ.Talk(event);
+    e.Talk(EVENT_SCENE_PAUSE);
 }
 
-void ShutdownListener::Resume(EventQueueAccessor eQ)
+void ShutdownListener::Resume(EventBoy& e)
 {
-    ALLEGRO_EVENT event;
-    event.user.type = EVENT_SCENE_RESUME;
-
-    eQ.Talk(event);
+    e.Talk(EVENT_SCENE_RESUME);
 }
 
-void ShutdownListener::SetupListen(EventQueueAccessor eQ)
+void ShutdownListener::Key(const ALLEGRO_EVENT& event)
+{
+    std::cout << event.keyboard.keycode << std::endl;
+}
+
+void ShutdownListener::ConnectEvents(EventBoy e)
 {
     using namespace std::placeholders;
 
     EventCallBack shutdownCallBack = std::bind(&ShutdownListener::Shutdown, this, _2);
     EventCallBack pauseCallBack = std::bind(&ShutdownListener::Pause, this, _2);
     EventCallBack resumeCallBack = std::bind(&ShutdownListener::Resume, this, _2);
+    EventCallBack keyCallBack = std::bind(&ShutdownListener::Key, this, _1);
 
-    eQ.ListenFor(GetEventId(ALLEGRO_EVENT_DISPLAY_CLOSE), shutdownCallBack);
-    eQ.ListenFor(GetKeyboardEventId(ALLEGRO_EVENT_KEY_DOWN, ALLEGRO_KEY_ESCAPE), shutdownCallBack);
-    eQ.ListenFor(GetKeyboardEventId(ALLEGRO_EVENT_KEY_DOWN, ALLEGRO_KEY_P), pauseCallBack);
-    eQ.ListenFor(GetKeyboardEventId(ALLEGRO_EVENT_KEY_DOWN, ALLEGRO_KEY_R), resumeCallBack);
+    e   .Listen(ALLEGRO_EVENT_DISPLAY_CLOSE)
+        .Do(shutdownCallBack);
+
+    e   .Listen(ALLEGRO_EVENT_KEY_UP)
+        .Filter(ALLEGRO_KEY_ESCAPE)
+        .Do(shutdownCallBack);
+
+    e   .Listen(ALLEGRO_EVENT_KEY_DOWN)
+        .Filter(ALLEGRO_KEY_P)
+        .Do(pauseCallBack);
+
+    e   .Listen(ALLEGRO_EVENT_KEY_CHAR)
+        .Filter(ALLEGRO_KEY_R)
+        .Do(resumeCallBack);
+
+    e   .Listen(ALLEGRO_EVENT_KEY_CHAR)
+        .Do(keyCallBack);
 }

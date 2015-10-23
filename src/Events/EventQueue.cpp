@@ -1,162 +1,60 @@
-#include "EventQueue.h"
+#include "Events/EventQueue.h"
 
 #include "Util/TracedException.h"
 
-EventQueue::EventQueue()
-    :   _callBackMap(),
-        _listenerMap(),
-        _sourceMap()
+namespace Events
 {
-    if (!al_is_system_installed())
-        throw TracedException("Creating EventQueue before al_init");
-
-    _eventQueue = al_create_event_queue();
-
-    if (_eventQueue == nullptr)
-        throw TracedException("Bad EventQueue");
-
-    al_init_user_event_source(&_eventSource);
-    al_register_event_source(_eventQueue, &_eventSource);
-}
-
-EventQueue::~EventQueue()
-{
-    al_destroy_event_queue(_eventQueue);
-    al_destroy_user_event_source(&_eventSource);
-}
-
-void EventQueue::HandleEvent(const ALLEGRO_EVENT& event)
-{
-    auto listeners = _callBackMap.equal_range(GetEventId(event));
-    for(auto it = listeners.first; it != listeners.second; ++it)
+    EventQueue::EventQueue(ALLEGRO_EVENT_QUEUE* eventQueue, DispatchFilter filter)
+        :   _eventQueue(eventQueue),
+            _dispatcher(filter, true),
+            _sources(eventQueue)
     {
-        auto callBack = it->second.CallBack;
-        auto listener = it->second.Listener;
+        if (!al_is_system_installed())
+            throw TracedException("Creating EventQueue before al_init");
 
-        callBack(event, GetAccessor(listener));
-    }
-}
+        if (_eventQueue == nullptr)
+            throw TracedException("Bad EventQueue");
 
-bool EventQueue::DeregisterCallBack(ListenerHandle listener, EventId id)
-{
-    auto listeners = _callBackMap.equal_range(id);
-    for(auto it = listeners.first; it != listeners.second; ++it)
-    {
-        ListenerHandle foundListener = it->second.Listener;
-
-        if (foundListener == listener)
-        {
-            _callBackMap.erase(it);
-            return true;
-        }
+        al_init_user_event_source(&_eventSource);
+        al_register_event_source(_eventQueue, &_eventSource);
     }
 
-    return false;
-}
-
-void EventQueue::RegisterListener(EventListenerEntry entry)
-{
-    _callBackMap.emplace(entry.Event, entry);
-    _listenerMap.emplace(entry.Listener, entry.Event);
-}
-
-bool EventQueue::DeregisterListener(ListenerHandle listener, EventId id)
-{
-    bool foundEventId = false;
-    bool foundCallBack = false;
-
-    auto eventIds = _listenerMap.equal_range(listener);
-    for (auto it = eventIds.first; it != eventIds.second; ++it)
+    EventQueue::~EventQueue()
     {
-        EventId foundId = it->second;
-        if (foundId == id)
-        {
-            _listenerMap.erase(it);
-            foundEventId = true;
-            break;
-        }
+        al_destroy_user_event_source(&_eventSource);
     }
 
-    foundCallBack = DeregisterCallBack(listener, id);
-
-    return foundEventId && foundCallBack;
-}
-
-bool EventQueue::DeregisterListener(ListenerHandle listener)
-{
-    bool missingCallBack = false;
-
-    auto eventIds = _listenerMap.equal_range(listener);
-    for (auto it = eventIds.first; it != eventIds.second; ++it)
+    void EventQueue::Register(ALLEGRO_EVENT_SOURCE* source)
     {
-        EventId currentId = it->second;
-
-        if (!DeregisterCallBack(listener, currentId))
-            missingCallBack = true;
+        al_register_event_source(_eventQueue, source);
     }
 
-    _listenerMap.erase(listener);
-
-    return missingCallBack;
-}
-
-void EventQueue::RegisterEventSource(ListenerHandle listener, ALLEGRO_EVENT_SOURCE* source)
-{
-    _sourceMap.emplace(listener, source);
-    al_register_event_source(_eventQueue, source);
-}
-
-bool EventQueue::DeregisterEventSource(ListenerHandle listener, ALLEGRO_EVENT_SOURCE* source)
-{
-    al_unregister_event_source(_eventQueue, source);
-
-    auto sources = _sourceMap.equal_range(listener);
-    for (auto it = sources.first; it != sources.second; ++it)
+    void EventQueue::ProcessNextEvent()
     {
-        ALLEGRO_EVENT_SOURCE* foundSource = it->second;
-        if (foundSource == source)
-        {
-            _sourceMap.erase(it);
-            return true;
-        }
+        ALLEGRO_EVENT event;
+        al_wait_for_event(_eventQueue, &event);
+
+        _dispatcher.FireEvent(event, GetBoy());
     }
 
-    return false;
-}
-
-bool EventQueue::DeregisterEventSource(ListenerHandle listener)
-{
-    auto sources = _sourceMap.equal_range(listener);
-    for (auto it = sources.first; it != sources.second; ++it)
+    bool EventQueue::Empty()
     {
-        ALLEGRO_EVENT_SOURCE* foundSource = it->second;
-        al_unregister_event_source(_eventQueue, foundSource);
+        return al_is_event_queue_empty(_eventQueue);
+    }
+    
+    void EventQueue::HandleEvent(const ALLEGRO_EVENT& event)
+    {
+        _dispatcher.FireEvent(event, GetBoy());
     }
 
-    _sourceMap.erase(sources.first, sources.second);
+    Dispatcher& EventQueue::GetDispatcher()
+    {
+        return _dispatcher;
+    }
 
-    return true;
-}
+    EventBoy EventQueue::GetBoy()
+    {
+        return EventBoy (&_dispatcher, &_sources, &_eventSource);
+    }
 
-void EventQueue::RegisterSource(ALLEGRO_EVENT_SOURCE* eventSource)
-{
-    al_register_event_source(_eventQueue, eventSource);
-}
-
-void EventQueue::BroadcastEvent(ALLEGRO_EVENT& userEvent)
-{
-    al_emit_user_event(&_eventSource, &userEvent, NULL);
-}
-
-void EventQueue::ProcessNextEvent()
-{
-    ALLEGRO_EVENT event;
-    al_wait_for_event(_eventQueue, &event);
-
-    HandleEvent(event);
-}
-
-bool EventQueue::Empty()
-{
-    return al_is_event_queue_empty(_eventQueue);
 }

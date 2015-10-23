@@ -1,27 +1,33 @@
-#ifndef H_EVENT_LOOP
-#define H_EVENT_LOOP
+#ifndef H_EVENTS_EVENT_LOOP
+#define H_EVENTS_EVENT_LOOP
 
 #include <allegro5/allegro.h>
 #include "Events/EventQueue.h"
 
-class EventLoop : public EventQueue
+namespace Events
 {
-    private:
-        bool _active;
-        bool _renderNeeded;
-        ALLEGRO_EVENT _renderEvent;
+    class EventLoop : public EventQueue
+    {
+        private:
+            bool _active;
+            bool _renderNeeded;
+            ALLEGRO_EVENT _renderEvent;
 
-        // Event Handlers
-        void OnRenderNeeded();
-        void OnStop();
+        protected:
+            void ConnectEvents();
+            void DisconnectEvents();
 
-    public:
-        EventLoop();
-        ~EventLoop();
+            // Event Handlers
+            void OnRenderNeeded();
+            void OnStop();
 
-        void SetupListen(EventQueueAccessor eQ);
+        public:
+            EventLoop(ALLEGRO_EVENT_QUEUE* eventQueue, DispatchFilter filter);
+            ~EventLoop();
 
-        void Run();
-        void Stop();
-};
+            void Run();
+            void Stop();
+    };
+}
+
 #endif

@@ -1,8 +1,7 @@
 #ifndef H_BALL_SCENE
 #define H_BALL_SCENE
 
-#include "Events/EventLoop.h"
-
+#include "Events/Events.h"
 #include <allegro5/allegro.h>
 
 struct Ball
@@ -18,13 +17,12 @@ class BallScene
 {
     private:
         ALLEGRO_TIMER* _timer;
-        ALLEGRO_EVENT _needRenderEvent;
         Ball _balls[5];
         int _width;
         int _height;
 
         void OnRender();
-        void OnUpdate(EventQueueAccessor eQ);
+        void OnUpdate(Events::EventBoy eQ);
         void OnPause();
         void OnResume();
 
@@ -32,8 +30,7 @@ class BallScene
         BallScene(int width, int height);
         ~BallScene();
 
-        void SetupTalk(EventQueueAccessor eQ);
-        void SetupListen(EventQueueAccessor eQ);
+        void ConnectEvents(Events::EventBoy e);
 };
 
 

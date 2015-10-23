@@ -3,6 +3,8 @@
 
 #include <allegro5/allegro_primitives.h>
 
+using namespace Events;
+
 BallScene::BallScene(int width, int height)
     : _width(width),
       _height(height)
@@ -43,8 +45,6 @@ BallScene::BallScene(int width, int height)
     _balls[4].radius = 34;
 
     al_start_timer(_timer);
-
-    _needRenderEvent.type = EVENT_LOOP_RENDER_NEEDED;
 }
 
 BallScene::~BallScene()
@@ -52,22 +52,27 @@ BallScene::~BallScene()
     al_destroy_timer(_timer);
 }
 
-void BallScene::SetupListen(EventQueueAccessor eQ)
+void BallScene::ConnectEvents(EventBoy e)
 {
     using namespace std::placeholders;
 
-    eQ.ListenFor(GetTimerEventId(ALLEGRO_EVENT_TIMER, _timer), std::bind(&BallScene::OnUpdate, this, _2));
-    eQ.ListenFor(GetEventId(EVENT_RENDER), std::bind(&BallScene::OnRender, this));
-    eQ.ListenFor(GetEventId(EVENT_SCENE_PAUSE), std::bind(&BallScene::OnPause, this));
-    eQ.ListenFor(GetEventId(EVENT_SCENE_RESUME), std::bind(&BallScene::OnResume, this));
+    e   .Listen(ALLEGRO_EVENT_TIMER)
+        .Filter((intptr_t)_timer)
+        .Do(std::bind(&BallScene::OnUpdate, this, _2));
+
+    e   .Listen(EVENT_RENDER)
+        .Do(std::bind(&BallScene::OnRender, this));
+
+    e   .Listen(EVENT_SCENE_PAUSE)
+        .Do(std::bind(&BallScene::OnPause, this));
+
+    e   .Listen(EVENT_SCENE_RESUME)
+        .Do(std::bind(&BallScene::OnResume, this));
+
+    e   .TalkFrom(al_get_timer_event_source(_timer));
 }
 
-void BallScene::SetupTalk(EventQueueAccessor eQ)
-{
-    eQ.TalkFrom(al_get_timer_event_source(_timer));
-}
-
-void BallScene::OnUpdate(EventQueueAccessor eQ)
+void BallScene::OnUpdate(EventBoy e)
 {
     for(Ball& b : _balls)
     {
@@ -95,7 +100,7 @@ void BallScene::OnUpdate(EventQueueAccessor eQ)
         }
     }
 
-    eQ.Talk(_needRenderEvent);
+    e.Talk(EVENT_LOOP_RENDER_NEEDED);
 }
 
 void BallScene::OnRender()

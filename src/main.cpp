@@ -8,10 +8,13 @@
    #include "allegro5/allegro_android.h"
 #endif
 
-#include "Events/EventLoop.h"
 #include "ShutdownListener.h"
 #include "BallScene.h"
+#include "Events/Events.h"
 #include "Util/TracedException.h"
+
+using namespace Events;
+using namespace std::placeholders;
 
 bool init_allegro()
 {
@@ -66,15 +69,24 @@ int main(int argc, char** argv)
     BallScene ballScene(width, height);
     ShutdownListener shutdownListener;
 
-    EventLoop gameLoop;
-    gameLoop.RegisterSource(al_get_display_event_source(display));
-    gameLoop.RegisterSource(al_get_keyboard_event_source());
-    gameLoop.RegisterListener(shutdownListener);
-    gameLoop.RegisterSource(ballScene);
-    gameLoop.RegisterListener(ballScene);
+    ALLEGRO_EVENT_QUEUE* eventQueue = al_create_event_queue();
+
+    EventLoop gameLoop (eventQueue, std::bind(EventTypeFilter, _1));
+
+    auto& dispatcher = gameLoop.GetDispatcher();
+    dispatcher.AddFilter(ALLEGRO_EVENT_KEY_DOWN, std::bind(KeyCodeFilter, _1));
+    dispatcher.AddFilter(ALLEGRO_EVENT_KEY_UP, std::bind(KeyCodeFilter, _1));
+    dispatcher.AddFilter(ALLEGRO_EVENT_KEY_CHAR, std::bind(KeyCodeFilter, _1));
+    dispatcher.AddFilter(ALLEGRO_EVENT_TIMER, std::bind(TimerSourceFilter, _1));
+
+    gameLoop.Register(al_get_display_event_source(display));
+    gameLoop.Register(al_get_keyboard_event_source());
+    gameLoop.Register(shutdownListener);
+    gameLoop.Register(ballScene);
 
     gameLoop.Run();
 
+    al_destroy_event_queue(eventQueue);
     al_destroy_display(display);
 
     return EXIT_SUCCESS;
