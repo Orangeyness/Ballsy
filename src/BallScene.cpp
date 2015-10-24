@@ -9,7 +9,7 @@ BallScene::BallScene(int width, int height)
     : _width(width),
       _height(height)
 {
-    _timer = al_create_timer(ALLEGRO_BPS_TO_SECS(2));
+    _timer = al_create_timer(ALLEGRO_BPS_TO_SECS(20));
 
     if (_timer == nullptr)
         throw TracedException("Bad Timer");
@@ -103,10 +103,16 @@ void BallScene::OnUpdate(EventBoy e)
     e.Talk(EVENT_RENDER_NEEDED);
 }
 
+#include <math.h>
+
 void BallScene::OnRender()
 {
+    al_clear_to_color(al_map_rgb(255, 255, 255));
 
-    al_clear_to_color(al_map_rgb(0, 0, 255));
+    al_draw_filled_rectangle(0, 0, _width/2, _height/2, al_map_rgb(100, 0, 0));
+    al_draw_filled_rectangle(_width/2, 0, _width, _height/2, al_map_rgb(0, 100, 0));
+    al_draw_filled_rectangle(0, _height/2, _width/2, _height, al_map_rgb(0, 0, 100));
+    al_draw_filled_rectangle(_width/2, _height/2, _width, _height, al_map_rgb(100, 100, 100));
 
     for(const Ball& ball : _balls)
         al_draw_filled_circle(ball.x, ball.y, ball.radius, al_map_rgb(255, 0, 0));

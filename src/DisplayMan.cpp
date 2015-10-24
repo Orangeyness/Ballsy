@@ -73,6 +73,12 @@ void DisplayMan::OnDisplayResize(const ALLEGRO_EVENT& event, Events::EventBoy bo
 
 void DisplayMan::SetTransformForOrientation(int orientation)
 {
+    ALLEGRO_TRANSFORM t;
+    al_identity_transform(&t);
+
+    int width = al_get_display_width(_display);
+    int height = al_get_display_height(_display);
+
     switch(orientation)
     {
         case ALLEGRO_DISPLAY_ORIENTATION_0_DEGREES:
@@ -80,14 +86,19 @@ void DisplayMan::SetTransformForOrientation(int orientation)
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_90_DEGREES:
             Util::Loggers::AndroidLogger::Log("Ballsy", "90");
+            al_rotate_transform(&t, M_PI/2);
+            al_translate_transform(&t, width, 0);
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_180_DEGREES:
             Util::Loggers::AndroidLogger::Log("Ballsy", "180");
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_270_DEGREES:
             Util::Loggers::AndroidLogger::Log("Ballsy", "270");
+            al_rotate_transform(&t, -M_PI/2);
+            al_translate_transform(&t, 0, height);
             break;
     }
+    al_use_transform(&t);
 }
 
 void DisplayMan::ConnectEvents(Events::EventBoy e)
