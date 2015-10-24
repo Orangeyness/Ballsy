@@ -13,7 +13,12 @@ namespace Util
 
         void AndroidLogger::Log(const std::string& message)
         {
-            __android_log_print(ANDROID_LOG_INFO, _name.c_str(), "%s", message.c_str());
+            AndroidLogger::Log(_name, message);
+        }
+
+        void AndroidLogger::Log(const std::string& name, const std::string& message)
+        {
+            __android_log_print(ANDROID_LOG_INFO, name.c_str(), "%s", message.c_str());
         }
     }
 }

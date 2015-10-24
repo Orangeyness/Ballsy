@@ -11,8 +11,7 @@ namespace Events
     {
         _active = false;
         _renderNeeded = false;
-
-        _renderEvent.user.type = EVENT_RENDER;
+        _renderAllowed = true;
     }
 
     EventLoop::~EventLoop()
@@ -23,19 +22,32 @@ namespace Events
     {
         EventBoy boy = GetBoy(this);
 
-        boy .Listen(EVENT_LOOP_RENDER_NEEDED)
-            .Do(std::bind(&EventLoop::OnRenderNeeded, this));
-
         boy .Listen(EVENT_LOOP_STOP)
             .Do(std::bind(&EventLoop::OnStop, this));
+
+        boy .Listen(EVENT_RENDER_NEEDED)
+            .Do(std::bind(&EventLoop::OnRenderNeeded, this));
+
+        boy .Listen(EVENT_RENDER_NOT_ALLOWED)
+            .Do(std::bind(&EventLoop::OnRenderAllowedChanged, this, false));
+
+        boy .Listen(EVENT_RENDER_ALLOWED)
+            .Do(std::bind(&EventLoop::OnRenderAllowedChanged, this, true));
     }
 
     void EventLoop::DisconnectEvents()
     {
         EventBoy boy = GetBoy(this);
 
-        boy .Listen(EVENT_LOOP_RENDER_NEEDED).Stop();
         boy .Listen(EVENT_LOOP_STOP).Stop();
+        boy .Listen(EVENT_RENDER_NEEDED).Stop();
+        boy .Listen(EVENT_RENDER_NOT_ALLOWED).Stop();
+        boy .Listen(EVENT_RENDER_ALLOWED).Stop();
+    }
+
+    void EventLoop::OnRenderAllowedChanged(bool state)
+    {
+        _renderAllowed = state;
     }
 
     void EventLoop::OnRenderNeeded()
@@ -50,19 +62,19 @@ namespace Events
 
     void EventLoop::Run()
     {
-       _active = true;
-       _renderNeeded = false;
+        _active = true;
+        _renderNeeded = false;
 
-       ConnectEvents();
+        ConnectEvents();
 
         while(_active)
         {
             ProcessNextEvent();
 
-            if (_renderNeeded && Empty())
+            if (_renderAllowed && _renderNeeded && Empty())
             {
                 _renderNeeded = false;
-                HandleEvent(_renderEvent);
+                HandleEvent(EVENT_RENDER);
             }
         }
 

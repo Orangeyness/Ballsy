@@ -11,13 +11,14 @@ namespace Events
         private:
             bool _active;
             bool _renderNeeded;
-            ALLEGRO_EVENT _renderEvent;
+            bool _renderAllowed;
 
         protected:
             void ConnectEvents();
             void DisconnectEvents();
 
             // Event Handlers
+            void OnRenderAllowedChanged(bool state);
             void OnRenderNeeded();
             void OnStop();
 

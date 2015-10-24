@@ -9,6 +9,7 @@
    #include "allegro5/allegro_android.h"
 #endif
 
+#include "DisplayMan.h"
 #include "ShutdownListener.h"
 #include "BallScene.h"
 #include "Events/Events.h"
@@ -62,17 +63,13 @@ int main(int argc, char** argv)
 
     Util::Loggers::AndroidLogger logger("Ballsy");
 #else
-    int width = 405;
-    int height = 720;
+    int width = 400;
+    int height = 400;
 
     Util::Loggers::StreamLogger logger(std::cout);
 #endif
 
-    auto display = al_create_display(width, height);
-
-    if (display == nullptr)
-        throw TracedException("Bad Display");
-
+    DisplayMan display(width, height);
     EventLogger eventLogger(logger);
     BallScene ballScene(width, height);
     ShutdownListener shutdownListener;
@@ -85,9 +82,10 @@ int main(int argc, char** argv)
     dispatcher.AddFilter(ALLEGRO_EVENT_KEY_DOWN, Events::Filters::KeyCode);
     dispatcher.AddFilter(ALLEGRO_EVENT_KEY_UP, Events::Filters::KeyCode);
     dispatcher.AddFilter(ALLEGRO_EVENT_KEY_CHAR, Events::Filters::KeyCode);
+
     dispatcher.AddFilter(ALLEGRO_EVENT_TIMER, Events::Filters::TimerSource);
 
-    gameLoop.Register(al_get_display_event_source(display));
+    gameLoop.Register(display);
     gameLoop.Register(al_get_keyboard_event_source());
     gameLoop.Register(eventLogger);
     gameLoop.Register(shutdownListener);
@@ -96,7 +94,6 @@ int main(int argc, char** argv)
     gameLoop.Run();
 
     al_destroy_event_queue(eventQueue);
-    al_destroy_display(display);
 
     return EXIT_SUCCESS;
 }

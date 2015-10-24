@@ -9,7 +9,7 @@ BallScene::BallScene(int width, int height)
     : _width(width),
       _height(height)
 {
-    _timer = al_create_timer(ALLEGRO_BPS_TO_SECS(60));
+    _timer = al_create_timer(ALLEGRO_BPS_TO_SECS(2));
 
     if (_timer == nullptr)
         throw TracedException("Bad Timer");
@@ -100,12 +100,13 @@ void BallScene::OnUpdate(EventBoy e)
         }
     }
 
-    e.Talk(EVENT_LOOP_RENDER_NEEDED);
+    e.Talk(EVENT_RENDER_NEEDED);
 }
 
 void BallScene::OnRender()
 {
-    al_clear_to_color(al_map_rgb(200, 200, 200));
+
+    al_clear_to_color(al_map_rgb(0, 0, 255));
 
     for(const Ball& ball : _balls)
         al_draw_filled_circle(ball.x, ball.y, ball.radius, al_map_rgb(255, 0, 0));

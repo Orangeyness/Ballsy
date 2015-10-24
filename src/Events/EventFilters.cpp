@@ -1,7 +1,5 @@
 #include "EventFilters.h"
 
-using namespace std::placeholders;
-
 namespace Events
 {
     namespace Filters
@@ -16,14 +14,19 @@ namespace Events
             return event.type;
         }
 
+        intptr_t KeyCode(const ALLEGRO_EVENT& event)
+        {
+            return event.keyboard.keycode;
+        }
+
         intptr_t TimerSource(const ALLEGRO_EVENT& event)
         {
             return (intptr_t)event.timer.source;
         }
 
-        intptr_t KeyCode(const ALLEGRO_EVENT& event)
+        intptr_t DisplaySource(const ALLEGRO_EVENT& event)
         {
-            return event.keyboard.keycode;
+            return (intptr_t)event.display.source;
         }
     }
 }

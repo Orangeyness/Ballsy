@@ -18,6 +18,7 @@ namespace Util
             public:
                 AndroidLogger(std::string name);
                 virtual void Log(const std::string& message) override;
+                static void Log(const std::string& name, const std::string& message);
         };
     }
 }

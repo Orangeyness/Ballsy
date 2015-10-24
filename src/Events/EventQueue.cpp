@@ -47,6 +47,14 @@ namespace Events
         _dispatcher.FireEvent(event, GetBoy());
     }
 
+    void EventQueue::HandleEvent(ALLEGRO_EVENT_TYPE type)
+    {
+        ALLEGRO_EVENT event;
+        event.type = type;
+
+        _dispatcher.FireEvent(event, GetBoy());
+    }
+
     Dispatcher& EventQueue::GetDispatcher()
     {
         return _dispatcher;

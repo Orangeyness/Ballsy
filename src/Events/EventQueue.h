@@ -22,6 +22,7 @@ namespace Events
 
         protected:
             void HandleEvent(const ALLEGRO_EVENT& event);
+            void HandleEvent(ALLEGRO_EVENT_TYPE type);
 
         public:
             EventQueue(ALLEGRO_EVENT_QUEUE* queue, DispatchFilter filter);
