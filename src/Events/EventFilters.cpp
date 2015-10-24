@@ -4,23 +4,26 @@ using namespace std::placeholders;
 
 namespace Events
 {
-    intptr_t NoChildrenFilter()
+    namespace Filters
     {
-        return -1;
-    }
+        intptr_t NoChildren(const ALLEGRO_EVENT& event)
+        {
+            return -1;
+        }
 
-    intptr_t EventTypeFilter(const ALLEGRO_EVENT& event)
-    {
-        return event.type;
-    }
+        intptr_t EventType(const ALLEGRO_EVENT& event)
+        {
+            return event.type;
+        }
 
-    intptr_t TimerSourceFilter(const ALLEGRO_EVENT& event)
-    {
-        return (intptr_t)event.timer.source;
-    }
+        intptr_t TimerSource(const ALLEGRO_EVENT& event)
+        {
+            return (intptr_t)event.timer.source;
+        }
 
-    intptr_t KeyCodeFilter(const ALLEGRO_EVENT& event)
-    {
-        return event.keyboard.keycode;
+        intptr_t KeyCode(const ALLEGRO_EVENT& event)
+        {
+            return event.keyboard.keycode;
+        }
     }
 }

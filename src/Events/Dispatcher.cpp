@@ -77,7 +77,7 @@ namespace Events
             if (!_allowedChildren)
                 throw TracedException("Enable to filter further");
 
-            AddFilter(id, std::bind(NoChildrenFilter), false);
+            AddFilter(id, Events::Filters::NoChildren, false);
          
             entry = _filteredDispatchers.find(id);
         }

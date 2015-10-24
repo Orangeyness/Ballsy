@@ -6,9 +6,6 @@
 #include "Events/EventLoop.h"
 #include "Events/EventQueue.h"
 #include "Events/EventBoy.h"
-
-#include "Events/Dispatcher.h"
-#include "Events/DispatcherProxy.h"
-#include "Events/SourceGroup.h"
+#include "Events/EventLogger.h"
 
 #endif

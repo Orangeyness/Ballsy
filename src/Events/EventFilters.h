@@ -8,10 +8,13 @@ using namespace std::placeholders;
 
 namespace Events
 {
-    intptr_t NoChildrenFilter();
-    intptr_t EventTypeFilter(const ALLEGRO_EVENT& event);
-    intptr_t TimerSourceFilter(const ALLEGRO_EVENT& event);
-    intptr_t KeyCodeFilter(const ALLEGRO_EVENT& event);
+    namespace Filters
+    {
+        intptr_t NoChildren(const ALLEGRO_EVENT& event);
+        intptr_t EventType(const ALLEGRO_EVENT& event);
+        intptr_t TimerSource(const ALLEGRO_EVENT& event);
+        intptr_t KeyCode(const ALLEGRO_EVENT& event);
+    }
 
     typedef std::function<intptr_t(const ALLEGRO_EVENT&)> DispatchFilter;
 }

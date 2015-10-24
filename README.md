@@ -17,7 +17,7 @@ Android build:
 ```
 mkdir build-android
 cd build-android
-cmake .. -DWANT_ANDROID=1 -D
+cmake .. -DWANT_ANDROID=1
 make
 ```
 

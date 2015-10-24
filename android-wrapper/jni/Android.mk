@@ -37,7 +37,9 @@ include $(PREBUILT_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE    := app 
 LOCAL_SRC_FILES := $(GAME_SOURCES)
-LOCAL_CFLAGS    += -W -Wall
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../csrc
+LOCAL_CFLAGS  += -W -Wall
+LOCAL_LDFLAGS += -L$(TOOLCHAIN_DIR)/sysroot/usr/lib -llog
 LOCAL_SHARED_LIBRARIES := allegro
 LOCAL_SHARED_LIBRARIES += allegro_image
 LOCAL_SHARED_LIBRARIES += allegro_primitives

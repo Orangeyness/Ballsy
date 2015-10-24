@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <iostream>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -12,6 +13,8 @@
 #include "BallScene.h"
 #include "Events/Events.h"
 #include "Util/TracedException.h"
+#include "Util/Loggers/StreamLogger.h"
+#include "Util/Loggers/AndroidLogger.h"
 
 using namespace Events;
 using namespace std::placeholders;
@@ -56,9 +59,13 @@ int main(int argc, char** argv)
 
     int width = (monitor_info.x2 - monitor_info.x1); 
     int height = (monitor_info.y2 - monitor_info.x1);
+
+    Util::Loggers::AndroidLogger logger("Ballsy");
 #else
     int width = 405;
     int height = 720;
+
+    Util::Loggers::StreamLogger logger(std::cout);
 #endif
 
     auto display = al_create_display(width, height);
@@ -66,21 +73,23 @@ int main(int argc, char** argv)
     if (display == nullptr)
         throw TracedException("Bad Display");
 
+    EventLogger eventLogger(logger);
     BallScene ballScene(width, height);
     ShutdownListener shutdownListener;
 
     ALLEGRO_EVENT_QUEUE* eventQueue = al_create_event_queue();
 
-    EventLoop gameLoop (eventQueue, std::bind(EventTypeFilter, _1));
+    EventLoop gameLoop (eventQueue, Events::Filters::EventType);
 
     auto& dispatcher = gameLoop.GetDispatcher();
-    dispatcher.AddFilter(ALLEGRO_EVENT_KEY_DOWN, std::bind(KeyCodeFilter, _1));
-    dispatcher.AddFilter(ALLEGRO_EVENT_KEY_UP, std::bind(KeyCodeFilter, _1));
-    dispatcher.AddFilter(ALLEGRO_EVENT_KEY_CHAR, std::bind(KeyCodeFilter, _1));
-    dispatcher.AddFilter(ALLEGRO_EVENT_TIMER, std::bind(TimerSourceFilter, _1));
+    dispatcher.AddFilter(ALLEGRO_EVENT_KEY_DOWN, Events::Filters::KeyCode);
+    dispatcher.AddFilter(ALLEGRO_EVENT_KEY_UP, Events::Filters::KeyCode);
+    dispatcher.AddFilter(ALLEGRO_EVENT_KEY_CHAR, Events::Filters::KeyCode);
+    dispatcher.AddFilter(ALLEGRO_EVENT_TIMER, Events::Filters::TimerSource);
 
     gameLoop.Register(al_get_display_event_source(display));
     gameLoop.Register(al_get_keyboard_event_source());
+    gameLoop.Register(eventLogger);
     gameLoop.Register(shutdownListener);
     gameLoop.Register(ballScene);
 

@@ -1,7 +1,5 @@
 #include "ShutdownListener.h"
 
-#include <iostream>
-
 using namespace Events;
 
 void ShutdownListener::Shutdown(EventBoy& e)
@@ -21,7 +19,6 @@ void ShutdownListener::Resume(EventBoy& e)
 
 void ShutdownListener::Key(const ALLEGRO_EVENT& event)
 {
-    std::cout << event.keyboard.keycode << std::endl;
 }
 
 void ShutdownListener::ConnectEvents(EventBoy e)
@@ -47,7 +44,4 @@ void ShutdownListener::ConnectEvents(EventBoy e)
     e   .Listen(ALLEGRO_EVENT_KEY_CHAR)
         .Filter(ALLEGRO_KEY_R)
         .Do(resumeCallBack);
-
-    e   .Listen(ALLEGRO_EVENT_KEY_CHAR)
-        .Do(keyCallBack);
 }
