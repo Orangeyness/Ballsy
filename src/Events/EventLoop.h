@@ -3,6 +3,7 @@
 
 #include <allegro5/allegro.h>
 #include "Events/EventQueue.h"
+#include "Rendering/RenderQueue.h"
 
 namespace Events
 {
@@ -10,24 +11,19 @@ namespace Events
     {
         private:
             bool _active;
-            bool _renderNeeded;
-            bool _renderAllowed;
+            Rendering::RenderQueue _renderer;
 
         protected:
-            void ConnectEvents();
-            void DisconnectEvents();
-
-            // Event Handlers
-            void OnRenderAllowedChanged(bool state);
-            void OnRenderNeeded();
             void OnStop();
 
         public:
             EventLoop(ALLEGRO_EVENT_QUEUE* eventQueue, DispatchFilter filter);
             ~EventLoop();
 
+            void ConnectEvents(EventBoy& boy);
+            void DisconnectEvents(EventBoy& boy);
+
             void Run();
-            void Stop();
     };
 }
 

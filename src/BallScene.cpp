@@ -1,5 +1,6 @@
 #include "BallScene.h"
 #include "Util/TracedException.h"
+#include "Events/UserEvents/RenderRegister.h"
 
 #include <allegro5/allegro_primitives.h>
 
@@ -60,9 +61,6 @@ void BallScene::ConnectEvents(EventBoy e)
         .Filter((intptr_t)_timer)
         .Do(std::bind(&BallScene::OnUpdate, this, _2));
 
-    e   .Listen(EVENT_RENDER)
-        .Do(std::bind(&BallScene::OnRender, this));
-
     e   .Listen(EVENT_SCENE_PAUSE)
         .Do(std::bind(&BallScene::OnPause, this));
 
@@ -70,6 +68,8 @@ void BallScene::ConnectEvents(EventBoy e)
         .Do(std::bind(&BallScene::OnResume, this));
 
     e   .TalkFrom(al_get_timer_event_source(_timer));
+
+    e   .Talk(UserEvents::RenderRegister(this, std::bind(&BallScene::OnRender, this), 10));
 }
 
 void BallScene::OnUpdate(EventBoy e)

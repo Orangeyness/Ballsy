@@ -1,7 +1,6 @@
 #include "DisplayMan.h"
 
 #include "Util/TracedException.h"
-#include "Util/Loggers/AndroidLogger.h"
 
 #include <string>
 #include <math.h>
@@ -55,17 +54,11 @@ void DisplayMan::OnSwitchIn(Events::EventBoy e)
 
 void DisplayMan::OnDisplayOrientation(const ALLEGRO_EVENT& event, Events::EventBoy boy)
 {
-    Util::Loggers::AndroidLogger::Log("Ballsy", "DisplayMan::OnDisplayOrientation");
-
     SetTransformForOrientation(event.display.orientation);
 }
 
 void DisplayMan::OnDisplayResize(const ALLEGRO_EVENT& event, Events::EventBoy boy)
 {
-    Util::Loggers::AndroidLogger::Log("Ballsy", "DisplayMan::OnDisplayResize");
-    Util::Loggers::AndroidLogger::Log("Ballsy", std::to_string(event.display.width));
-    Util::Loggers::AndroidLogger::Log("Ballsy", std::to_string(event.display.height));
-
     al_acknowledge_resize(_display);
 
     SetTransformForOrientation(al_get_display_orientation(_display));
@@ -82,18 +75,14 @@ void DisplayMan::SetTransformForOrientation(int orientation)
     switch(orientation)
     {
         case ALLEGRO_DISPLAY_ORIENTATION_0_DEGREES:
-            Util::Loggers::AndroidLogger::Log("Ballsy", "0");
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_90_DEGREES:
-            Util::Loggers::AndroidLogger::Log("Ballsy", "90");
             al_rotate_transform(&t, M_PI/2);
             al_translate_transform(&t, width, 0);
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_180_DEGREES:
-            Util::Loggers::AndroidLogger::Log("Ballsy", "180");
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_270_DEGREES:
-            Util::Loggers::AndroidLogger::Log("Ballsy", "270");
             al_rotate_transform(&t, -M_PI/2);
             al_translate_transform(&t, 0, height);
             break;

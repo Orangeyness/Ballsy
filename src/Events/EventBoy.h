@@ -4,6 +4,8 @@
 #include "Events/Dispatcher.h"
 #include "Events/DispatcherProxy.h"
 #include "Events/SourceGroup.h"
+#include "Events/EventReader.h"
+#include "Events/EventTypes.h"
 
 #include <allegro5/allegro.h>
 
@@ -24,11 +26,11 @@ namespace Events
         protected:
             EventBoy(ListenerHandle _listener, Dispatcher* dispatcher, SourceGroup* sources, ALLEGRO_EVENT_SOURCE* internalSource);
             EventBoy(Dispatcher* dispatcher, SourceGroup* sources, ALLEGRO_EVENT_SOURCE* internalSource);
+            EventBoy();
+
             void ReBind(ListenerHandle _listener);
 
         public:
-            EventBoy();
-
             bool Enabled();
 
             DispatcherProxy Listen();
@@ -41,9 +43,73 @@ namespace Events
             void StopTalking(ALLEGRO_EVENT_SOURCE* source);
             void StopTalking();
 
-            void Talk(ALLEGRO_EVENT& event);
+            template<typename T>
+            void Talk(T event);
+            void Talk(UserEventId type);
+            void Talk(ALLEGRO_EVENT& type);
             void Talk(ALLEGRO_EVENT_TYPE type);
+
+            template<typename T>
+            void Register(T& client);
+           
+            template<typename T>
+            void Register(T* client);
+
+            template<typename T>
+            void Unregister(T& client);
+           
+            template<typename T>
+            void Unregister(T* client);
     };
 
+    template<typename T>
+    void EventBoy::Talk(T event)
+    {
+        event.Transmit(_internalSource);
+    }
+
+    template<typename T>
+    void EventBoy::Register(T& client)
+    {
+        auto originalListener = _listener;
+        ReBind(static_cast<ListenerHandle>(&client));
+
+        client.ConnectEvents(*this);
+
+        ReBind(originalListener);
+    }
+
+    template<typename T>
+    void EventBoy::Register(T* client)
+    {
+        auto originalListener = _listener;
+        ReBind(static_cast<ListenerHandle>(client));
+
+        client->ConnectEvents(*this);
+
+        ReBind(originalListener);
+    }
+
+    template<typename T>
+    void EventBoy::Unregister(T& client)
+    {
+        auto originalListener = _listener;
+        ReBind(static_cast<ListenerHandle>(&client));
+
+        client.DisconnectEvents(*this);
+
+        ReBind(originalListener);
+    }
+
+    template<typename T>
+    void EventBoy::Unregister(T* client)
+    {
+        auto originalListener = _listener;
+        ReBind(static_cast<ListenerHandle>(client));
+
+        client->DisconnectEvents(*this);
+
+        ReBind(originalListener);
+    }
 }
 #endif

@@ -8,7 +8,7 @@ namespace Events
 {
 
     #define CREATE_EVENT_TYPE(x) x,
-    enum 
+    enum UserEventId
     {
         EVENT_USER_BASE = ALLEGRO_GET_EVENT_TYPE('R','L','B', 0),
         #include "Events/EventTypes.hpp"

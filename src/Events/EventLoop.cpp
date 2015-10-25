@@ -1,7 +1,10 @@
 #include "Events/EventLoop.h"
 #include "Events/EventTypes.h"
+#include "Rendering/RenderQueue.h"
 
 #include <functional>
+
+using namespace Rendering;
 
 namespace Events
 {
@@ -10,79 +13,46 @@ namespace Events
         :   EventQueue(eventQueue, filter)
     {
         _active = false;
-        _renderNeeded = false;
-        _renderAllowed = true;
     }
 
     EventLoop::~EventLoop()
     {
     }
 
-    void EventLoop::ConnectEvents()
+    void EventLoop::ConnectEvents(EventBoy& boy)
     {
-        EventBoy boy = GetBoy(this);
-
         boy .Listen(EVENT_LOOP_STOP)
             .Do(std::bind(&EventLoop::OnStop, this));
 
-        boy .Listen(EVENT_RENDER_NEEDED)
-            .Do(std::bind(&EventLoop::OnRenderNeeded, this));
-
-        boy .Listen(EVENT_RENDER_NOT_ALLOWED)
-            .Do(std::bind(&EventLoop::OnRenderAllowedChanged, this, false));
-
-        boy .Listen(EVENT_RENDER_ALLOWED)
-            .Do(std::bind(&EventLoop::OnRenderAllowedChanged, this, true));
+        boy .Register(_renderer);
     }
 
-    void EventLoop::DisconnectEvents()
+    void EventLoop::DisconnectEvents(EventBoy& boy)
     {
-        EventBoy boy = GetBoy(this);
-
         boy .Listen(EVENT_LOOP_STOP).Stop();
-        boy .Listen(EVENT_RENDER_NEEDED).Stop();
-        boy .Listen(EVENT_RENDER_NOT_ALLOWED).Stop();
-        boy .Listen(EVENT_RENDER_ALLOWED).Stop();
-    }
 
-    void EventLoop::OnRenderAllowedChanged(bool state)
-    {
-        _renderAllowed = state;
-    }
-
-    void EventLoop::OnRenderNeeded()
-    {
-        _renderNeeded = true;
+        boy .Unregister(_renderer);
     }
 
     void EventLoop::OnStop()
     {
-        Stop();
+        _active = false;
     }
 
     void EventLoop::Run()
     {
         _active = true;
-        _renderNeeded = false;
 
-        ConnectEvents();
+        Register(this);
 
         while(_active)
         {
             ProcessNextEvent();
 
-            if (_renderAllowed && _renderNeeded && Empty())
-            {
-                _renderNeeded = false;
-                HandleEvent(EVENT_RENDER);
-            }
+            if (_renderer.NeedsRender())
+                _renderer.Render();
         }
 
-        DisconnectEvents();
-    }
-
-    void EventLoop::Stop()
-    {
-        _active = false;
+        Unregister(this);
     }
 }

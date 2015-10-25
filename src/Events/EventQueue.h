@@ -42,40 +42,34 @@ namespace Events
             void Register(T* client);
 
             template<typename T>
-            inline EventBoy GetBoy(T& target);
-
+            void Unregister(T& client);
+           
             template<typename T>
-            inline EventBoy GetBoy(T* target);
+            void Unregister(T* client);
     };
-
-    template<typename T>
-    inline EventBoy EventQueue::GetBoy(T* target)
-    {
-        EventBoy boy = GetBoy();
-        boy.ReBind(static_cast<ListenerHandle>(target));
-
-        return boy;
-    }
-
-    template<typename T>
-    inline EventBoy EventQueue::GetBoy(T& target)
-    {
-        EventBoy boy = GetBoy();
-        boy.ReBind(static_cast<ListenerHandle>(&target));
-
-        return boy;
-    }
 
     template<typename T>
     void EventQueue::Register(T& client)
     {
-        client.ConnectEvents(GetBoy(client));
+        GetBoy().Register(client);
     }
 
     template<typename T>
     void EventQueue::Register(T* client)
     {
-        client->ConnectEvents(GetBoy(client));
+        GetBoy().Register(client);
+    }
+
+    template<typename T>
+    void EventQueue::Unregister(T& client)
+    {
+        GetBoy().Register(client);
+    }
+
+    template<typename T>
+    void EventQueue::Unregister(T* client)
+    {
+        GetBoy().Register(client);
     }
 }
 

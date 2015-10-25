@@ -41,7 +41,6 @@ bool init_allegro()
     al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
     al_set_new_display_option(ALLEGRO_SAMPLES, 4, ALLEGRO_SUGGEST);
     al_set_new_display_option(ALLEGRO_RENDER_METHOD, 1, ALLEGRO_SUGGEST);
-    //al_set_new_display_option(ALLEGRO_VSYNC, 2, ALLEGRO_REQUIRE);
     al_set_new_display_option(ALLEGRO_CAN_DRAW_INTO_BITMAP, 1, ALLEGRO_SUGGEST);
 
     al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR | ALLEGRO_VIDEO_BITMAP);
@@ -63,8 +62,8 @@ int main(int argc, char** argv)
 
     Util::Loggers::AndroidLogger logger("Ballsy");
 #else
-    int width = 400;
-    int height = 400;
+    int width = 480;
+    int height = 720;
 
     Util::Loggers::StreamLogger logger(std::cout);
 #endif
@@ -82,7 +81,6 @@ int main(int argc, char** argv)
     dispatcher.AddFilter(ALLEGRO_EVENT_KEY_DOWN, Events::Filters::KeyCode);
     dispatcher.AddFilter(ALLEGRO_EVENT_KEY_UP, Events::Filters::KeyCode);
     dispatcher.AddFilter(ALLEGRO_EVENT_KEY_CHAR, Events::Filters::KeyCode);
-
     dispatcher.AddFilter(ALLEGRO_EVENT_TIMER, Events::Filters::TimerSource);
 
     gameLoop.Register(display);

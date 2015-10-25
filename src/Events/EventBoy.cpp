@@ -73,4 +73,9 @@ namespace Events
 
         al_emit_user_event(_internalSource, &event, NULL);
     }
+
+    void EventBoy::Talk(UserEventId type)
+    {
+        Talk(static_cast<ALLEGRO_EVENT_TYPE>(type));
+    }
 }

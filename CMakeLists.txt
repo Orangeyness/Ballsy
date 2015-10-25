@@ -4,7 +4,7 @@ project (Ballsy)
 option(WANT_ANDROID "Build for Android" OFF)
 
 set(GAME_FILE_DIRECTORY "Ballsy")
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall") 
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-unused-parameter") 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -g")
 
