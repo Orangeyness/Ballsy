@@ -2,13 +2,19 @@
 #define H_DISPLAY_MAN
 
 #include "Events/Events.h"
-
+#include "Util/Vector2.h"
 #include <allegro5/allegro.h>
+
+using Util::Vector2;
 
 class DisplayMan
 {
     private:
         ALLEGRO_DISPLAY* _display;
+        Vector2 _size;
+        Vector2 _portraitSize;
+        Vector2 _orientationTranslation;
+        float _orientationRotation;
 
         void SetTransformForOrientation(int orientation);
 
@@ -20,8 +26,13 @@ class DisplayMan
         void OnDisplayResize(const ALLEGRO_EVENT& event, Events::EventBoy boy);
 
     public:
-        DisplayMan(int width, int height);
+        DisplayMan(const Vector2& size);
         ~DisplayMan();
+
+        const Vector2& PortraitSize() const;
+        const Vector2& Size() const;
+        const Vector2& OrientationTranslation() const;
+        float OrientationRotation() const;
 
         void ConnectEvents(Events::EventBoy boy);
 };

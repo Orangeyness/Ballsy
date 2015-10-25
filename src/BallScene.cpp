@@ -5,10 +5,10 @@
 #include <allegro5/allegro_primitives.h>
 
 using namespace Events;
+using namespace Rendering;
 
-BallScene::BallScene(int width, int height)
-    : _width(width),
-      _height(height)
+BallScene::BallScene(Viewport viewport)
+    :   _viewport(viewport)
 {
     _timer = al_create_timer(ALLEGRO_BPS_TO_SECS(20));
 
@@ -74,6 +74,8 @@ void BallScene::ConnectEvents(EventBoy e)
 
 void BallScene::OnUpdate(EventBoy e)
 {
+    auto size = _viewport.Size();
+
     for(Ball& b : _balls)
     {
         b.x += b.xspeed;
@@ -83,9 +85,9 @@ void BallScene::OnUpdate(EventBoy e)
         {
             b.x = b.radius;
             b.xspeed = -b.xspeed;
-        } else if (b.x + b.radius >= _width)
+        } else if (b.x + b.radius >= size.X)
         {
-            b.x = _width - 1 - b.radius;
+            b.x = size.X - 1 - b.radius;
             b.xspeed = -b.xspeed;
         }
 
@@ -93,9 +95,9 @@ void BallScene::OnUpdate(EventBoy e)
         {
             b.y = b.radius;
             b.yspeed = -b.yspeed;
-        } else if (b.y + b.radius >= _height)
+        } else if (b.y + b.radius >= size.Y)
         {
-            b.y = _height - b.radius;
+            b.y = size.Y - b.radius;
             b.yspeed = -b.yspeed;
         }
     }
@@ -109,13 +111,18 @@ void BallScene::OnRender()
 {
     al_clear_to_color(al_map_rgb(255, 255, 255));
 
-    al_draw_filled_rectangle(0, 0, _width/2, _height/2, al_map_rgb(100, 0, 0));
-    al_draw_filled_rectangle(_width/2, 0, _width, _height/2, al_map_rgb(0, 100, 0));
-    al_draw_filled_rectangle(0, _height/2, _width/2, _height, al_map_rgb(0, 0, 100));
-    al_draw_filled_rectangle(_width/2, _height/2, _width, _height, al_map_rgb(100, 100, 100));
+    _viewport.SetTransform();
+    auto size = _viewport.Size();
+
+    al_draw_filled_rectangle(0, 0, size.X/2, size.Y/2, al_map_rgb(100, 0, 0));
+    al_draw_filled_rectangle(size.X/2, 0, size.X, size.Y/2, al_map_rgb(0, 100, 0));
+    al_draw_filled_rectangle(0, size.Y/2, size.X/2, size.Y, al_map_rgb(0, 0, 100));
+    al_draw_filled_rectangle(size.X/2, size.Y/2, size.X, size.Y, al_map_rgb(100, 100, 100));
 
     for(const Ball& ball : _balls)
         al_draw_filled_circle(ball.x, ball.y, ball.radius, al_map_rgb(255, 0, 0));
+
+    _viewport.UnsetTransform();
 
     al_flip_display();
 }

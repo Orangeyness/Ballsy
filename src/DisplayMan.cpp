@@ -8,23 +8,25 @@
 using namespace Events;
 using namespace std::placeholders;
 
-DisplayMan::DisplayMan(int width, int height)
+DisplayMan::DisplayMan(const Vector2& size)
+    :   _size(size),
+        _portraitSize(size)
 {
     if (!al_is_system_installed())
         throw TracedException("Creating Display Before al_init");
 
-    _display = al_create_display(width, height);
+    _display = al_create_display(_size.X, _size.Y);
 
     if (_display == nullptr)
         throw TracedException("Bad Display");
 
+    SetTransformForOrientation(al_get_display_orientation(_display));
 }
 
 DisplayMan::~DisplayMan()
 {
     al_destroy_display(_display);
 }
-
 
 void DisplayMan::OnHaltDrawing(Events::EventBoy e)
 {
@@ -61,33 +63,66 @@ void DisplayMan::OnDisplayResize(const ALLEGRO_EVENT& event, Events::EventBoy bo
 {
     al_acknowledge_resize(_display);
 
-    SetTransformForOrientation(al_get_display_orientation(_display));
+    _size.X = event.display.width;
+    _size.Y = event.display.height;
+
+    int orientation = al_get_display_orientation(_display);
+
+    if (orientation == ALLEGRO_DISPLAY_ORIENTATION_0_DEGREES || 
+        orientation == ALLEGRO_DISPLAY_ORIENTATION_180_DEGREES)
+    {
+        _portraitSize = _size;
+    }
+    else
+    {
+        _portraitSize.X = _size.Y;
+        _portraitSize.Y = _size.X;
+    }
+
+    SetTransformForOrientation(orientation);
 }
 
 void DisplayMan::SetTransformForOrientation(int orientation)
 {
-    ALLEGRO_TRANSFORM t;
-    al_identity_transform(&t);
-
-    int width = al_get_display_width(_display);
-    int height = al_get_display_height(_display);
+    _orientationTranslation.X = 0;
+    _orientationTranslation.Y = 0;
+    _orientationRotation = 0;
 
     switch(orientation)
     {
         case ALLEGRO_DISPLAY_ORIENTATION_0_DEGREES:
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_90_DEGREES:
-            al_rotate_transform(&t, M_PI/2);
-            al_translate_transform(&t, width, 0);
+            _orientationRotation = M_PI/2;
+            _orientationTranslation.X = 1;
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_180_DEGREES:
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_270_DEGREES:
-            al_rotate_transform(&t, -M_PI/2);
-            al_translate_transform(&t, 0, height);
+            _orientationRotation = -M_PI/2;
+            _orientationTranslation.Y = 1;
             break;
     }
-    al_use_transform(&t);
+}
+
+const Vector2& DisplayMan::PortraitSize() const
+{
+    return _portraitSize;
+}
+
+const Vector2& DisplayMan::Size() const
+{
+    return _size;
+}
+
+const Vector2& DisplayMan::OrientationTranslation() const 
+{
+    return _orientationTranslation;
+}
+
+float DisplayMan::OrientationRotation() const
+{
+    return _orientationRotation;
 }
 
 void DisplayMan::ConnectEvents(Events::EventBoy e)

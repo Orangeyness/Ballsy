@@ -13,11 +13,14 @@
 #include "ShutdownListener.h"
 #include "BallScene.h"
 #include "Events/Events.h"
+#include "Rendering/Viewport.h"
+#include "Util/Vector2.h"
 #include "Util/TracedException.h"
 #include "Util/Loggers/StreamLogger.h"
 #include "Util/Loggers/AndroidLogger.h"
 
 using namespace Events;
+using namespace Rendering;
 using namespace std::placeholders;
 
 bool init_allegro()
@@ -37,7 +40,7 @@ bool init_allegro()
     if (!al_init_primitives_addon())
         return false;
 
-    al_set_new_display_flags(ALLEGRO_OPENGL);
+    al_set_new_display_flags(ALLEGRO_OPENGL | ALLEGRO_RESIZABLE);
     al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
     al_set_new_display_option(ALLEGRO_SAMPLES, 4, ALLEGRO_SUGGEST);
     al_set_new_display_option(ALLEGRO_RENDER_METHOD, 1, ALLEGRO_SUGGEST);
@@ -68,10 +71,12 @@ int main(int argc, char** argv)
     Util::Loggers::StreamLogger logger(std::cout);
 #endif
 
-    DisplayMan display(width, height);
-    EventLogger eventLogger(logger);
-    BallScene ballScene(width, height);
+    DisplayMan display(Vector2(width, height));
+    Viewport sceneView(display, Vector2(640, 960), Anchor::LEFT, Anchor::CENTER);
+
+    BallScene ballScene(sceneView);
     ShutdownListener shutdownListener;
+    EventLogger eventLogger(logger);
 
     ALLEGRO_EVENT_QUEUE* eventQueue = al_create_event_queue();
 
@@ -85,7 +90,7 @@ int main(int argc, char** argv)
 
     gameLoop.Register(display);
     gameLoop.Register(al_get_keyboard_event_source());
-    gameLoop.Register(eventLogger);
+    //gameLoop.Register(eventLogger);
     gameLoop.Register(shutdownListener);
     gameLoop.Register(ballScene);
 
