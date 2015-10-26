@@ -10,7 +10,8 @@ using namespace std::placeholders;
 
 DisplayMan::DisplayMan(const Vector2& size)
     :   _size(size),
-        _portraitSize(size)
+        _portraitSize(size),
+        _lastChangeTime(0)
 {
     if (!al_is_system_installed())
         throw TracedException("Creating Display Before al_init");
@@ -84,8 +85,6 @@ void DisplayMan::OnDisplayResize(const ALLEGRO_EVENT& event, Events::EventBoy bo
 
 void DisplayMan::SetTransformForOrientation(int orientation)
 {
-    _orientationTranslation.X = 0;
-    _orientationTranslation.Y = 0;
     _orientationRotation = 0;
 
     switch(orientation)
@@ -94,15 +93,15 @@ void DisplayMan::SetTransformForOrientation(int orientation)
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_90_DEGREES:
             _orientationRotation = M_PI/2;
-            _orientationTranslation.X = 1;
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_180_DEGREES:
             break;
         case ALLEGRO_DISPLAY_ORIENTATION_270_DEGREES:
             _orientationRotation = -M_PI/2;
-            _orientationTranslation.Y = 1;
             break;
     }
+
+    _lastChangeTime = al_get_time();
 }
 
 const Vector2& DisplayMan::PortraitSize() const
@@ -115,14 +114,14 @@ const Vector2& DisplayMan::Size() const
     return _size;
 }
 
-const Vector2& DisplayMan::OrientationTranslation() const 
-{
-    return _orientationTranslation;
-}
-
 float DisplayMan::OrientationRotation() const
 {
     return _orientationRotation;
+}
+
+double DisplayMan::LastChangeTime() const
+{
+    return _lastChangeTime;
 }
 
 void DisplayMan::ConnectEvents(Events::EventBoy e)

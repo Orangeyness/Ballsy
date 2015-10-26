@@ -37,6 +37,9 @@ bool init_allegro()
     if (!al_install_mouse())
         return false;
 
+    if (!al_install_touch_input())
+        return false;
+
     if (!al_init_primitives_addon())
         return false;
 
@@ -72,7 +75,7 @@ int main(int argc, char** argv)
 #endif
 
     DisplayMan display(Vector2(width, height));
-    Viewport sceneView(display, Vector2(640, 960), Anchor::LEFT, Anchor::CENTER);
+    Viewport sceneView(display, Vector2(640, 960), Anchor::LEFT, Anchor::TOP);
 
     BallScene ballScene(sceneView);
     ShutdownListener shutdownListener;
@@ -90,6 +93,8 @@ int main(int argc, char** argv)
 
     gameLoop.Register(display);
     gameLoop.Register(al_get_keyboard_event_source());
+    gameLoop.Register(al_get_touch_input_event_source());
+    gameLoop.Register(al_get_mouse_event_source());
     //gameLoop.Register(eventLogger);
     gameLoop.Register(shutdownListener);
     gameLoop.Register(ballScene);

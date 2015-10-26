@@ -114,6 +114,7 @@ void BallScene::OnRender()
     _viewport.SetTransform();
     auto size = _viewport.Size();
 
+    al_draw_filled_rectangle(0, 0, 1920, 1920, al_map_rgb(0, 0, 0));
     al_draw_filled_rectangle(0, 0, size.X/2, size.Y/2, al_map_rgb(100, 0, 0));
     al_draw_filled_rectangle(size.X/2, 0, size.X, size.Y/2, al_map_rgb(0, 100, 0));
     al_draw_filled_rectangle(0, size.Y/2, size.X/2, size.Y, al_map_rgb(0, 0, 100));

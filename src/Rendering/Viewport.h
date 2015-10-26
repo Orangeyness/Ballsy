@@ -3,10 +3,12 @@
 
 #include "DisplayMan.h"
 #include "Util/Vector2.h"
+#include "Util/Rect.h"
 
 #include <allegro5/allegro.h>
 
 using Util::Vector2;
+using Util::Rect;
 
 namespace Rendering
 {
@@ -28,8 +30,15 @@ namespace Rendering
         private:
             const DisplayMan& _display;
             Vector2 _size;
-            Vector2 _anchorOrigin;
             ALLEGRO_TRANSFORM _previous;
+            ALLEGRO_TRANSFORM _transform;
+            Rect _clipRect;
+            double _cacheTime;
+            Anchor _xOrigin;
+            Anchor _yOrigin;
+
+        protected:
+            void GenerateTransform();
 
         public:
             Viewport(const DisplayMan& display, Vector2 internalSize, Anchor x, Anchor y);

@@ -13,8 +13,8 @@ class DisplayMan
         ALLEGRO_DISPLAY* _display;
         Vector2 _size;
         Vector2 _portraitSize;
-        Vector2 _orientationTranslation;
         float _orientationRotation;
+        double _lastChangeTime;
 
         void SetTransformForOrientation(int orientation);
 
@@ -31,8 +31,8 @@ class DisplayMan
 
         const Vector2& PortraitSize() const;
         const Vector2& Size() const;
-        const Vector2& OrientationTranslation() const;
         float OrientationRotation() const;
+        double LastChangeTime() const;
 
         void ConnectEvents(Events::EventBoy boy);
 };
