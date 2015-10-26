@@ -1,139 +1,119 @@
 #include "BallScene.h"
+#include "Util/Vector2.h"
 #include "Util/TracedException.h"
 #include "Events/UserEvents/RenderRegister.h"
+#include "Events/UserEvents/BallCreation.h"
 
 #include <allegro5/allegro_primitives.h>
 
 using namespace Events;
 using namespace Rendering;
+using namespace std::placeholders;
+
+using Util::Vector2;
+using Events::UserEvents::BallCreation;
+using Events::UserEvents::BallCreationState;
+using Events::UserEvents::RenderRegister;
 
 BallScene::BallScene(Viewport viewport)
-    :   _viewport(viewport)
+    :   _viewport(viewport),
+        _input(_viewport),
+        _updateTimer(40, std::bind(&BallScene::OnUpdate, this, _2)),
+        _isCreatingBall(false)
 {
-    _timer = al_create_timer(ALLEGRO_BPS_TO_SECS(20));
-
-    if (_timer == nullptr)
-        throw TracedException("Bad Timer");
-
-    _balls[0].x = 50;
-    _balls[0].y = 50;
-    _balls[0].xspeed = 20;
-    _balls[0].yspeed = 20;
-    _balls[0].radius = 100;
-
-    _balls[1].x = 200;
-    _balls[1].y = 300;
-    _balls[1].xspeed = 1.2;
-    _balls[1].yspeed = 4;
-    _balls[1].radius = 7;
-
-    _balls[2].x = 300;
-    _balls[2].y = 200;
-    _balls[2].xspeed = 2;
-    _balls[2].yspeed = -1;
-    _balls[2].radius = 9;
-
-    _balls[3].x = 100;
-    _balls[3].y = 150;
-    _balls[3].xspeed = 3;
-    _balls[3].yspeed = 3;
-    _balls[3].radius = 10;
-
-    _balls[4].x = 300;
-    _balls[4].y = 40;
-    _balls[4].xspeed = 2;
-    _balls[4].yspeed = 2;
-    _balls[4].radius = 34;
-
-    al_start_timer(_timer);
-}
-
-BallScene::~BallScene()
-{
-    al_destroy_timer(_timer);
+    _creatingBall.speed.X = 4;
+    _creatingBall.speed.Y = 3;
 }
 
 void BallScene::ConnectEvents(EventBoy e)
 {
-    using namespace std::placeholders;
+    e   .Register(_input);
+    e   .Register(_updateTimer);
 
-    e   .Listen(ALLEGRO_EVENT_TIMER)
-        .Filter((intptr_t)_timer)
-        .Do(std::bind(&BallScene::OnUpdate, this, _2));
+    e   .Listen(BallCreation::EventType)
+        .Do(std::bind(&BallScene::OnInput, this, _1));
 
-    e   .Listen(EVENT_SCENE_PAUSE)
-        .Do(std::bind(&BallScene::OnPause, this));
+    e   .Talk(RenderRegister(this, std::bind(&BallScene::OnRender, this), 10));
+}
 
-    e   .Listen(EVENT_SCENE_RESUME)
-        .Do(std::bind(&BallScene::OnResume, this));
+void BallScene::OnInput(const ALLEGRO_EVENT& event)
+{
 
-    e   .TalkFrom(al_get_timer_event_source(_timer));
+    BallCreation params(event);
+    BallCreationState state = params.GetState();
+    _creatingBall.pos = params.GetPosition();
+    UpdateBallPosition(_creatingBall, _viewport.Size());   
 
-    e   .Talk(UserEvents::RenderRegister(this, std::bind(&BallScene::OnRender, this), 10));
+    switch(state)
+    {
+        case BallCreationState::STARTED:
+            _isCreatingBall = true;
+            _creatingBall.radius = 1;
+            break;
+
+        case BallCreationState::COMPLETED:
+            _isCreatingBall = false;
+            _balls.push_back(_creatingBall);
+            break;
+
+        default:
+            break;
+    }
 }
 
 void BallScene::OnUpdate(EventBoy e)
 {
+    if (_isCreatingBall)
+        _creatingBall.radius += 1;
+
     auto size = _viewport.Size();
 
     for(Ball& b : _balls)
-    {
-        b.x += b.xspeed;
-        b.y += b.yspeed;
-
-        if (b.x - b.radius < 0)
-        {
-            b.x = b.radius;
-            b.xspeed = -b.xspeed;
-        } else if (b.x + b.radius >= size.X)
-        {
-            b.x = size.X - 1 - b.radius;
-            b.xspeed = -b.xspeed;
-        }
-
-        if (b.y - b.radius < 0)
-        {
-            b.y = b.radius;
-            b.yspeed = -b.yspeed;
-        } else if (b.y + b.radius >= size.Y)
-        {
-            b.y = size.Y - b.radius;
-            b.yspeed = -b.yspeed;
-        }
-    }
+        UpdateBallPosition(b, size);
 
     e.Talk(EVENT_RENDER_NEEDED);
 }
 
-#include <math.h>
+void BallScene::UpdateBallPosition(Ball& b, const Vector2& size)
+{
+    b.pos += b.speed;
+
+    if (b.pos.X - b.radius < 0)
+    {
+        b.pos.X = b.radius;
+        b.speed.X = -b.speed.X;
+    } else if (b.pos.X + b.radius >= size.X)
+    {
+        b.pos.X = size.X - 1 - b.radius;
+        b.speed.X = -b.speed.X;
+    }
+
+    if (b.pos.Y - b.radius < 0)
+    {
+        b.pos.Y = b.radius;
+        b.speed.Y = -b.speed.Y;
+    } else if (b.pos.Y + b.radius >= size.Y)
+    {
+        b.pos.Y = size.Y - b.radius;
+        b.speed.Y = -b.speed.Y;
+    }
+}
 
 void BallScene::OnRender()
 {
     al_clear_to_color(al_map_rgb(255, 255, 255));
 
     _viewport.SetTransform();
-    auto size = _viewport.Size();
 
-    al_draw_filled_rectangle(0, 0, 1920, 1920, al_map_rgb(0, 0, 0));
-    al_draw_filled_rectangle(0, 0, size.X/2, size.Y/2, al_map_rgb(100, 0, 0));
-    al_draw_filled_rectangle(size.X/2, 0, size.X, size.Y/2, al_map_rgb(0, 100, 0));
-    al_draw_filled_rectangle(0, size.Y/2, size.X/2, size.Y, al_map_rgb(0, 0, 100));
-    al_draw_filled_rectangle(size.X/2, size.Y/2, size.X, size.Y, al_map_rgb(100, 100, 100));
+    al_draw_filled_rectangle(0, 0, 1920, 1920, al_map_rgb(0, 200, 200));
+
+    if (_isCreatingBall)
+        al_draw_filled_circle(_creatingBall.pos.X, _creatingBall.pos.Y, _creatingBall.radius, al_map_rgb(0, 0, 255));
 
     for(const Ball& ball : _balls)
-        al_draw_filled_circle(ball.x, ball.y, ball.radius, al_map_rgb(255, 0, 0));
+        al_draw_filled_circle(ball.pos.X, ball.pos.Y, ball.radius, al_map_rgb(255, 0, 0));
 
     _viewport.UnsetTransform();
 
     al_flip_display();
-}
-
-void BallScene::OnPause()
-{
-    al_stop_timer(_timer);
-}
-
-void BallScene::OnResume()
-{
-    al_start_timer(_timer);
 }

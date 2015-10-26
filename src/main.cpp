@@ -34,11 +34,13 @@ bool init_allegro()
     if (!al_install_keyboard())
         return false;
 
-    if (!al_install_mouse())
-        return false;
-
+#ifdef ANDROID
     if (!al_install_touch_input())
         return false;
+#else
+    if (!al_install_mouse())
+        return false;
+#endif
 
     if (!al_init_primitives_addon())
         return false;
@@ -93,8 +95,13 @@ int main(int argc, char** argv)
 
     gameLoop.Register(display);
     gameLoop.Register(al_get_keyboard_event_source());
+
+#ifdef ANDROID
     gameLoop.Register(al_get_touch_input_event_source());
+#else
     gameLoop.Register(al_get_mouse_event_source());
+#endif
+
     //gameLoop.Register(eventLogger);
     gameLoop.Register(shutdownListener);
     gameLoop.Register(ballScene);

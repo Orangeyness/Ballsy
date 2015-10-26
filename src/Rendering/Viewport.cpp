@@ -67,6 +67,9 @@ namespace Rendering
 
         al_translate_transform(&_transform, translationForScreenPos.X, translationForScreenPos.Y);
 
+        al_copy_transform(&_invertedTransform, &_transform);
+        al_invert_transform(&_invertedTransform);
+
         float x1 = 0;
         float y1 = 0;
         float x2 = _size.X;
@@ -105,5 +108,17 @@ namespace Rendering
     const Vector2& Viewport::Size() const
     {
         return _size;
+    }
+
+    bool Viewport::Contains(Vector2 position) const
+    {
+        return _clipRect.Contains(position);
+    }
+
+    Vector2 Viewport::ToViewCoordinates(Vector2 position) const
+    {
+        al_transform_coordinates(&_invertedTransform, &position.X, &position.Y);
+
+        return position;
     }
 }

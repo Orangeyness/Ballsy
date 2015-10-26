@@ -16,6 +16,11 @@ namespace Util
             Vector2() : X(0), Y(0) { }
             Vector2(float x, float y) : X(x), Y(y) { }
 
+            Vector2& operator*=(const Vector2& rhs) { X *= rhs.X; Y *= rhs.Y; return *this; }
+            Vector2& operator/=(const Vector2& rhs) { X /= rhs.X; Y /= rhs.Y; return *this; }
+            Vector2& operator+=(const Vector2& rhs) { X += rhs.X; Y += rhs.Y; return *this; }
+            Vector2& operator-=(const Vector2& rhs) { X -= rhs.X; Y -= rhs.Y; return *this; }
+
             friend Vector2 operator*(const Vector2& lhs, float rhs) { return Vector2(lhs.X * rhs, lhs.Y * rhs); }
             friend Vector2 operator/(const Vector2& lhs, float rhs) { return Vector2(lhs.X / rhs, lhs.Y / rhs); }
             friend Vector2 operator+(const Vector2& lhs, float rhs) { return Vector2(lhs.X + rhs, lhs.Y + rhs); }

@@ -32,6 +32,7 @@ namespace Rendering
             Vector2 _size;
             ALLEGRO_TRANSFORM _previous;
             ALLEGRO_TRANSFORM _transform;
+            ALLEGRO_TRANSFORM _invertedTransform;
             Rect _clipRect;
             double _cacheTime;
             Anchor _xOrigin;
@@ -45,7 +46,10 @@ namespace Rendering
 
             void SetTransform();
             void UnsetTransform();
+
             const Vector2& Size() const;
+            bool Contains(Vector2 position) const;
+            Vector2 ToViewCoordinates(Vector2 position) const;
     };
 }
 

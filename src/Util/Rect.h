@@ -26,13 +26,21 @@ namespace Util
                 _bottomRight.Y = std::max(y1, y2);
             } 
 
-            float Top() { return _topLeft.Y; }
-            float Bottom() { return _bottomRight.Y; }
-            float Left() { return _topLeft.X; }
-            float Right() { return _bottomRight.X; }
+            float Top() const { return _topLeft.Y; }
+            float Bottom() const { return _bottomRight.Y; }
+            float Left() const { return _topLeft.X; }
+            float Right() const { return _bottomRight.X; }
 
-            float Width() { return _bottomRight.X - _topLeft.X; }
-            float Height() { return _bottomRight.Y - _topLeft.Y; }
+            float Width() const { return _bottomRight.X - _topLeft.X; }
+            float Height() const { return _bottomRight.Y - _topLeft.Y; }
+
+            bool Contains(Vector2 position) const
+            {
+                return  position.X >= Left() && 
+                        position.X <= Right() && 
+                        position.Y >= Top() &&
+                        position.Y <= Bottom();
+            }
     };
 
 }

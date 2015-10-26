@@ -24,6 +24,8 @@ namespace Rendering
     {
         for(const auto& rendererEntry : _renderers)
             rendererEntry.CallBack();
+
+        _dirty = false;
     }
 
     void RenderQueue::OnDirty()
