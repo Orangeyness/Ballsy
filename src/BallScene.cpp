@@ -16,13 +16,78 @@ using Events::UserEvents::BallCreationState;
 using Events::UserEvents::RenderRegister;
 
 BallScene::BallScene(Viewport viewport)
-    :   _viewport(viewport),
+    :   _world(b2Vec2(0.0f, 10.0f)),
+        _viewport(viewport),
         _input(_viewport),
-        _updateTimer(40, std::bind(&BallScene::OnUpdate, this, _2)),
-        _isCreatingBall(false)
+        _updateTimer(40, std::bind(&BallScene::OnUpdate, this, _2))
 {
-    _creatingBall.speed.X = 4;
-    _creatingBall.speed.Y = 3;
+    Vector2 size = Vector2(_viewport.Size());
+    size.X = ScreenToPhysical(size.X);
+    size.Y = ScreenToPhysical(size.Y);
+
+    b2Body* body;
+    b2BodyDef bodyDef;
+    b2EdgeShape edge;
+    bodyDef.type = b2_staticBody;
+
+    // Horizontal edge
+    edge.Set( b2Vec2(-size.X, 0), b2Vec2(size.X, 0));
+
+    // Top
+    bodyDef.position.Set(size.X / 2, 0);
+    body = _world.CreateBody(&bodyDef);
+    body->CreateFixture(&edge, 1.0);
+
+    // Bottom
+    bodyDef.position.Set(size.X / 2, size.Y);
+    body = _world.CreateBody(&bodyDef);
+    body->CreateFixture(&edge, 1.0f);
+
+    // vertical edge
+    edge.Set( b2Vec2(0, -size.Y), b2Vec2(0, size.Y));
+
+    // Left
+    bodyDef.position.Set(0, size.Y / 2);
+    body = _world.CreateBody(&bodyDef);
+    body->CreateFixture(&edge, 1.0f);
+    
+    // Right 
+    bodyDef.position.Set(size.X, size.Y / 2);
+    body = _world.CreateBody(&bodyDef);
+    body->CreateFixture(&edge, 1.0f);
+
+    CreateBall(_viewport.Size() / 2, Vector2(10, 5), 10, 1, 1);
+    CreateBall(Vector2(200, 200), Vector2(20, 20), 10, 1, 1);
+}
+
+b2Body* BallScene::CreateBall(const Vector2& position, const Vector2& velocity, float radius, float density, float restitution)
+{
+    b2Vec2 realPosition (ScreenToPhysical(position.X), ScreenToPhysical(position.Y));
+    b2Vec2 realVelocity (velocity.X, velocity.Y);
+
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.position.Set(realPosition.x, realPosition.y);
+    bodyDef.linearDamping = 0.0f;
+    bodyDef.gravityScale = 0.0f;
+    bodyDef.bullet = true;
+
+    b2Body* body = _world.CreateBody(&bodyDef);
+
+    b2CircleShape circle;
+    circle.m_p.Set(0, 0);
+    circle.m_radius = ScreenToPhysical(radius);
+
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &circle;
+    fixtureDef.density = density;
+    fixtureDef.friction = 0.0f;
+    fixtureDef.restitution = restitution;
+    body->CreateFixture(&fixtureDef);
+
+    body->ApplyLinearImpulse(realVelocity, body->GetWorldCenter(), true);
+
+    return body;
 }
 
 void BallScene::ConnectEvents(EventBoy e)
@@ -38,65 +103,60 @@ void BallScene::ConnectEvents(EventBoy e)
 
 void BallScene::OnInput(const ALLEGRO_EVENT& event)
 {
-
     BallCreation params(event);
     BallCreationState state = params.GetState();
-    _creatingBall.pos = params.GetPosition();
-    UpdateBallPosition(_creatingBall, _viewport.Size());   
+    Vector2 position = params.GetPosition();
 
     switch(state)
     {
         case BallCreationState::STARTED:
-            _isCreatingBall = true;
-            _creatingBall.radius = 1;
+            _creatingBall = CreateBall(position, Vector2(0, 0), 10, 1, 0);
             break;
 
         case BallCreationState::COMPLETED:
-            _isCreatingBall = false;
-            _balls.push_back(_creatingBall);
+            _creatingBall->SetGravityScale(1);
+            _creatingBall->SetAwake(true);
+            _creatingBall = nullptr;
             break;
 
-        default:
+        case BallCreationState::MOVED:
+        {
+            b2Vec2 realPosition (ScreenToPhysical(position.X), ScreenToPhysical(position.Y));
+            _creatingBall->SetTransform(realPosition, _creatingBall->GetAngle());
             break;
+        }
     }
 }
 
 void BallScene::OnUpdate(EventBoy e)
 {
-    if (_isCreatingBall)
-        _creatingBall.radius += 1;
+    if (_creatingBall != nullptr)
+    {
+        b2Fixture* originalFixture = _creatingBall->GetFixtureList();
+        b2CircleShape* originalCircle = (b2CircleShape*)originalFixture->GetShape();
+        float currentRadius = originalCircle->m_radius;
 
-    auto size = _viewport.Size();
+        _creatingBall->DestroyFixture(originalFixture);
 
-    for(Ball& b : _balls)
-        UpdateBallPosition(b, size);
+        b2CircleShape circle;
+        circle.m_p.Set(0, 0);
+        circle.m_radius = currentRadius + ScreenToPhysical(1);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &circle;
+        fixtureDef.density = 1.0f;
+        fixtureDef.friction = 0.0f;
+        fixtureDef.restitution = 0.0f;
+        _creatingBall->CreateFixture(&fixtureDef);
+    }
+
+    float timeStep = 1.0f / 40.0f;
+    int velocityIterations = 8;
+    int positionIterations = 3;
+
+    _world.Step(timeStep, velocityIterations, positionIterations);
 
     e.Talk(EVENT_RENDER_NEEDED);
-}
-
-void BallScene::UpdateBallPosition(Ball& b, const Vector2& size)
-{
-    b.pos += b.speed;
-
-    if (b.pos.X - b.radius < 0)
-    {
-        b.pos.X = b.radius;
-        b.speed.X = -b.speed.X;
-    } else if (b.pos.X + b.radius >= size.X)
-    {
-        b.pos.X = size.X - 1 - b.radius;
-        b.speed.X = -b.speed.X;
-    }
-
-    if (b.pos.Y - b.radius < 0)
-    {
-        b.pos.Y = b.radius;
-        b.speed.Y = -b.speed.Y;
-    } else if (b.pos.Y + b.radius >= size.Y)
-    {
-        b.pos.Y = size.Y - b.radius;
-        b.speed.Y = -b.speed.Y;
-    }
 }
 
 void BallScene::OnRender()
@@ -105,13 +165,23 @@ void BallScene::OnRender()
 
     _viewport.SetTransform();
 
-    al_draw_filled_rectangle(0, 0, 1920, 1920, al_map_rgb(0, 200, 200));
+    for ( b2Body* b = _world.GetBodyList(); b; b = b->GetNext())
+    {
+        b2Fixture* fixture = b->GetFixtureList();
 
-    if (_isCreatingBall)
-        al_draw_filled_circle(_creatingBall.pos.X, _creatingBall.pos.Y, _creatingBall.radius, al_map_rgb(0, 0, 255));
+        b2Shape::Type shapeType = fixture->GetType();
+        if ( shapeType != b2Shape::e_circle)
+            continue;
 
-    for(const Ball& ball : _balls)
-        al_draw_filled_circle(ball.pos.X, ball.pos.Y, ball.radius, al_map_rgb(255, 0, 0));
+        b2CircleShape* circle = (b2CircleShape*)fixture->GetShape();
+
+        auto ballPos = b->GetPosition();
+
+        float radius = PhysicalToScreen(circle->m_radius);
+        float ballX = PhysicalToScreen(ballPos.x);
+        float ballY = PhysicalToScreen(ballPos.y);
+        al_draw_filled_circle(ballX, ballY, radius, al_map_rgb(255, 0, 0));
+    }
 
     _viewport.UnsetTransform();
 

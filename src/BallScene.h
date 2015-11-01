@@ -1,6 +1,8 @@
 #ifndef H_BALL_SCENE
 #define H_BALL_SCENE
 
+#include "Box2D/Box2D.h"
+
 #include "Events/Events.h"
 #include "Rendering/Viewport.h"
 #include "Util/Vector2.h"
@@ -11,29 +13,25 @@
 #include <allegro5/allegro.h>
 #include <vector>
 
-struct Ball
-{
-    Vector2 pos;
-    Vector2 speed;
-    float radius;
-};
-
 class BallScene
 {
     private:
+        const float PixelsPerMetre = 20;
+
+        b2World _world;
         ALLEGRO_TIMER* _timer;
-        std::vector<Ball> _balls;
         Rendering::Viewport _viewport;
         BallInputListener _input;
         SceneTimer _updateTimer;
-        Ball _creatingBall;
-        bool _isCreatingBall;
+        b2Body* _creatingBall;
 
+        b2Body* CreateBall(const Vector2& position, const Vector2& velocity, float radius, float density, float restitution);
         void OnRender();
         void OnUpdate(Events::EventBoy e);
         void OnInput(const ALLEGRO_EVENT& event);
 
-        void UpdateBallPosition(Ball& b, const Util::Vector2& viewSize);
+        inline float PhysicalToScreen(float x);
+        inline float ScreenToPhysical(float x); 
 
     public:
         BallScene(Rendering::Viewport viewport);
@@ -41,5 +39,22 @@ class BallScene
         void ConnectEvents(Events::EventBoy e);
 };
 
+/*
+class BallContactListener : public b2ContactListener
+{
+    void BeginContact(b2Contact* contact);
+    void EndContact(b2Contact* contact);
+    void PreSolve(b2Contact* contact, const b2Manifold* manifold);
+};*/
+
+inline float BallScene::PhysicalToScreen(float x)
+{
+    return x * PixelsPerMetre;
+}
+
+inline float BallScene::ScreenToPhysical(float x)
+{
+    return x / PixelsPerMetre;
+}
 
 #endif
